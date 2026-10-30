@@ -1,0 +1,304 @@
+{
+ "at": "2026-10-25T19:58:43+00:00",
+ "config": {
+  "per_objective": 6,
+  "per_source": 2,
+  "weights": {
+   "paper": 1.5,
+   "primary": 1.5,
+   "news": 1.0,
+   "other": 0.6
+  },
+  "llm": true
+ },
+ "summary": {
+  "cases": 14,
+  "hit@6": 0.857,
+  "recall@6": 0.696,
+  "mrr": 0.702,
+  "answer_accuracy": 0.857,
+  "faithfulness": 0.988,
+  "context_sufficient": 0.714
+ },
+ "cases": [
+  {
+   "id": "transformer-bleu",
+   "relevant_in_pool": 2,
+   "pool": 414,
+   "hit": true,
+   "recall": 0.5,
+   "rr": 0.5,
+   "ranks": [
+    2
+   ],
+   "summary": "The original Transformer paper (arXiv 1706.03762) reports that the big Transformer model achieved a BLEU score of 28.4 on the WMT 2014 English-to-German translation task. This set a new state of the art. It outperformed the best previously reported models, including ensembles, by more than 2.0 BLEU. The paper also says it achieved a new state of the art on WMT 2014 English-to-French.",
+   "correct": true,
+   "tokens": {
+    "input_tokens": 2058,
+    "output_tokens": 218
+   },
+   "sufficient": "yes",
+   "faithfulness": 1,
+   "unsupported": []
+  },
+  {
+   "id": "gpt3-size",
+   "relevant_in_pool": 1,
+   "pool": 309,
+   "hit": true,
+   "recall": 1.0,
+   "rr": 1.0,
+   "ranks": [
+    1
+   ],
+   "summary": "According to the GPT-3 paper, GPT-3 is an autoregressive language model with 175 billion parameters, described as 10x more than any previous non-sparse language model. It was tested in the few-shot setting. For all tasks it was applied without any gradient updates or fine-tuning, with tasks and few-shot demonstrations specified purely via text interaction with the model. The paper reports strong performance on many NLP datasets, including translation, question-answering, and cloze tasks, as well as tasks requiring on-the-fly reasoning or domain adaptation such as unscrambling words, using a novel word in a sentence, or 3-digit arithmetic.",
+   "correct": true,
+   "tokens": {
+    "input_tokens": 2315,
+    "output_tokens": 297
+   },
+   "sufficient": "yes",
+   "faithfulness": 1,
+   "unsupported": []
+  },
+  {
+   "id": "bert-objectives",
+   "relevant_in_pool": 8,
+   "pool": 495,
+   "hit": true,
+   "recall": 0.25,
+   "rr": 1.0,
+   "ranks": [
+    1
+   ],
+   "summary": "The passages only partly answer this. The BERT paper (arXiv 1810.04805) names two pre-training tasks: the \"masked LM\" (MLM) and \"next sentence prediction\" (NSP). Its ablation section (5.1) compares two pre-training objectives with the same data, fine-tuning scheme and hyperparameters as BERT BASE. One of them, \"No NSP\", is a bidirectional model trained with MLM but without the NSP task. The passages give no further detail on how either objective works.",
+   "correct": true,
+   "tokens": {
+    "input_tokens": 2099,
+    "output_tokens": 249
+   },
+   "sufficient": "partly",
+   "faithfulness": 1,
+   "unsupported": []
+  },
+  {
+   "id": "nvidia-fy24-revenue",
+   "relevant_in_pool": 2,
+   "pool": 361,
+   "hit": true,
+   "recall": 1.0,
+   "rr": 1.0,
+   "ranks": [
+    1,
+    2
+   ],
+   "summary": "Nvidia's press release of February 21, 2024 reported record full-year fiscal 2024 revenue of $60.9 billion, up 126% from the prior year. In the same release, fourth-quarter revenue was a record $22.1 billion, up 22% from Q3 and up 265% from a year earlier. Data Center revenue for the quarter was $18.4 billion, up 409% from a year ago. For fiscal 2024, GAAP earnings per diluted share were $11.93 (up 586%) and non-GAAP were $12.96 (up 288%).",
+   "correct": true,
+   "tokens": {
+    "input_tokens": 2228,
+    "output_tokens": 268
+   },
+   "sufficient": "yes",
+   "faithfulness": 1,
+   "unsupported": []
+  },
+  {
+   "id": "llama2-sizes",
+   "relevant_in_pool": 1,
+   "pool": 99,
+   "hit": true,
+   "recall": 1.0,
+   "rr": 0.5,
+   "ranks": [
+    2
+   ],
+   "summary": "According to the Llama 2 paper (arXiv 2307.09288), the released pretrained and fine-tuned large language models range in scale from 7 billion to 70 billion parameters. The fine-tuned versions are called Llama 2-Chat and are optimized for dialogue use cases. The passages do not list the specific intermediate sizes.",
+   "correct": true,
+   "tokens": {
+    "input_tokens": 2008,
+    "output_tokens": 191
+   },
+   "sufficient": "yes",
+   "faithfulness": 1,
+   "unsupported": []
+  },
+  {
+   "id": "chinchilla-scaling",
+   "relevant_in_pool": 1,
+   "pool": 30,
+   "hit": true,
+   "recall": 1.0,
+   "rr": 1.0,
+   "ranks": [
+    1
+   ],
+   "summary": "The Chinchilla paper (Hoffmann et al.) investigated the optimal model size and number of tokens for training a transformer language model under a given compute budget. By training over 400 language models, ranging from 70 million to over 16 billion parameters, on 5 to 500 billion tokens, the authors found that model size and number of training tokens should be scaled equally for compute-optimal training. Specifically, for every doubling of model size, the number of training tokens should also be doubled.",
+   "correct": true,
+   "tokens": {
+    "input_tokens": 2107,
+    "output_tokens": 236
+   },
+   "sufficient": "yes",
+   "faithfulness": 1,
+   "unsupported": []
+  },
+  {
+   "id": "react-method",
+   "relevant_in_pool": 1,
+   "pool": 29,
+   "hit": false,
+   "recall": 0.0,
+   "rr": 0.0,
+   "ranks": [],
+   "summary": "The passages don't say what ReAct makes language models generate. The ReAct paper (\"ReAct: Synergizing Reasoning and Acting in Language Models\", Shunyu Yao and 6 other authors) appears in the passages, but only its title, author line, and the start of its abstract (\"their abilities for reasoning (e.g.\") are included. The abstract is cut off before it describes the method's output. The title suggests a combination of reasoning and acting, but the passages don't state this. The other passages are about RAG, a different method.",
+   "correct": false,
+   "tokens": {
+    "input_tokens": 2165,
+    "output_tokens": 257
+   },
+   "sufficient": "no",
+   "faithfulness": 0.8333333333333334,
+   "unsupported": [
+    "The other passages are about RAG, a different method"
+   ]
+  },
+  {
+   "id": "mast-modes",
+   "relevant_in_pool": 1,
+   "pool": 30,
+   "hit": true,
+   "recall": 1.0,
+   "rr": 0.5,
+   "ranks": [
+    2
+   ],
+   "summary": "The MAST (Multi-Agent System Failure Taxonomy) identifies 14 unique failure modes, clustered into 3 categories: (i) system design issues, (ii) inter-agent misalignment, and (iii) task verification. It was developed through analysis of 150 traces, guided by expert human annotators and validated by high inter-annotator agreement (kappa = 0.88). It underpins MAST-Data, a multi-agent system failure dataset.",
+   "correct": true,
+   "tokens": {
+    "input_tokens": 2078,
+    "output_tokens": 234
+   },
+   "sufficient": "yes",
+   "faithfulness": 1,
+   "unsupported": []
+  },
+  {
+   "id": "ssb-electrolyte",
+   "relevant_in_pool": 1,
+   "pool": 417,
+   "hit": true,
+   "recall": 1.0,
+   "rr": 1.0,
+   "ranks": [
+    1
+   ],
+   "summary": "A solid-state battery (SSB) uses a solid electrolyte to conduct ions between the electrodes, instead of the liquid or gel polymer electrolytes found in conventional batteries. The solid electrolyte acts as an ideal separator that allows only lithium ions to pass through. According to the source, this could potentially solve many problems of liquid-electrolyte Li-ion batteries, including flammability, voltage range, unstable electrode interface formation, cycling performance, and mechanical strength. Solid-state batteries can also use metallic lithium for the anode and oxides or sulfides for the cathode, improving energy density.",
+   "correct": true,
+   "tokens": {
+    "input_tokens": 2062,
+    "output_tokens": 289
+   },
+   "sufficient": "yes",
+   "faithfulness": 1,
+   "unsupported": []
+  },
+  {
+   "id": "crispr-nobel",
+   "relevant_in_pool": 2,
+   "pool": 381,
+   "hit": true,
+   "recall": 0.5,
+   "rr": 1.0,
+   "ranks": [
+    1
+   ],
+   "summary": "Emmanuelle Charpentier and Jennifer Doudna received the Nobel Prize in Chemistry in 2020 (the passage dates it to October 2020). The Wikipedia page on CRISPR gene editing says the prize was awarded \"for the development of a method for genome editing.\"",
+   "correct": true,
+   "tokens": {
+    "input_tokens": 2171,
+    "output_tokens": 182
+   },
+   "sufficient": "yes",
+   "faithfulness": 1,
+   "unsupported": []
+  },
+  {
+   "id": "bitcoin-double-spend",
+   "relevant_in_pool": 2,
+   "pool": 214,
+   "hit": true,
+   "recall": 0.5,
+   "rr": 1.0,
+   "ranks": [
+    1
+   ],
+   "summary": "The Bitcoin paper says digital signatures solve only part of the problem, because their main benefits are lost if a trusted third party is still needed to prevent double-spending. A payee can verify signatures to check the chain of ownership, but can't verify that an owner did not double-spend the coin. The common fix is a trusted central authority, or mint, that checks every transaction for double spending. Bitcoin instead proposes a peer-to-peer network. The network timestamps transactions by hashing them into an ongoing chain of hash-based proof-of-work. This forms a record that cannot be changed without redoing the proof-of-work.",
+   "correct": true,
+   "tokens": {
+    "input_tokens": 2019,
+    "output_tokens": 284
+   },
+   "sufficient": "partly",
+   "faithfulness": 1,
+   "unsupported": []
+  },
+  {
+   "id": "rag-memory",
+   "relevant_in_pool": 1,
+   "pool": 224,
+   "hit": true,
+   "recall": 1.0,
+   "rr": 1.0,
+   "ranks": [
+    1
+   ],
+   "summary": "RAG models combine pre-trained parametric memory and non-parametric memory for language generation. In the RAG paper (arXiv 2005.11401), the parametric memory is a pre-trained seq2seq model. The non-parametric memory is a dense vector index of Wikipedia, accessed with a pre-trained neural retriever. The paper contrasts this with earlier pre-trained models that had a differentiable access mechanism to explicit non-parametric memory, which had only been investigated for extractive downstream tasks. It also compares two RAG formulations: one conditions on the same retrieved passages across the whole generated sequence, and the other can use different passages per token.",
+   "correct": true,
+   "tokens": {
+    "input_tokens": 2017,
+    "output_tokens": 298
+   },
+   "sufficient": "yes",
+   "faithfulness": 1,
+   "unsupported": []
+  },
+  {
+   "id": "actor-model",
+   "relevant_in_pool": 1,
+   "pool": 214,
+   "hit": true,
+   "recall": 1.0,
+   "rr": 0.3333333333333333,
+   "ranks": [
+    3
+   ],
+   "summary": "According to the Wikipedia article on the actor model, an actor is a computational entity that, in response to a message it receives, can concurrently do three things: send a finite number of messages to other actors, create a finite number of new actors, and designate the behavior to be used for the next message it receives. A second passage from the same article words this as making local decisions, creating more actors, sending more messages, and determining how to respond to the next message received. Actors may modify their own private state, but they can only affect each other indirectly through messaging. The article says this removes the need for lock-based synchronization. The two passages are consistent with each other.",
+   "correct": true,
+   "tokens": {
+    "input_tokens": 1971,
+    "output_tokens": 271
+   },
+   "sufficient": "yes",
+   "faithfulness": 1,
+   "unsupported": []
+  },
+  {
+   "id": "bm25-params",
+   "relevant_in_pool": 1,
+   "pool": 306,
+   "hit": false,
+   "recall": 0.0,
+   "rr": 0.0,
+   "ranks": [],
+   "summary": "The passages only partly answer this. They mention a coefficient b, saying that at its extreme values BM25 turns into the ranking functions BM11 (b = 1) and BM15 (b = 0). They also describe BM25 as a bag-of-words retrieval function that ranks documents by the query terms appearing in each, regardless of proximity. The passages do not name the other free parameters (such as k1) and give no usual or typical values for any parameter.",
+   "correct": false,
+   "tokens": {
+    "input_tokens": 2101,
+    "output_tokens": 227
+   },
+   "sufficient": "partly",
+   "faithfulness": 1,
+   "unsupported": []
+  }
+ ]
+}

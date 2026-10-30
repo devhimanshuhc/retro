@@ -1,0 +1,20 @@
+[
+  {
+    "id": "nvidia-q2-fy27",
+    "prompt": "Write a market report on Nvidia's Q2 fiscal 2027 earnings (the quarter ended July 26, 2026)",
+    "note": "Facts checked against NVIDIA's own release, SEC EDGAR q2fy27pr.htm (filed 2026-08-26).",
+    "must_have": [
+      {"label": "revenue $96.2B", "any": ["\\$96\\.2\\d* ?billion", "96,221"]},
+      {"label": "Data Center revenue $89.0B", "any": ["\\$89\\.0 ?billion", "\\$89 billion"]},
+      {"label": "Edge Computing revenue $7.2B", "any": ["Edge Computing[^.]{0,80}\\$7\\.2", "\\$7\\.2 ?billion[^.]{0,80}Edge Computing"]},
+      {"label": "non-GAAP EPS $2.22", "any": ["\\$2\\.22"]},
+      {"label": "year-ago non-GAAP EPS $1.01", "any": ["\\$1\\.01"]},
+      {"label": "Q3 revenue outlook $108B", "any": ["\\$108(\\.0)? ?billion"]},
+      {"label": "GAAP net income $59.7B", "any": ["\\$59\\.7 ?billion", "59,688"]}
+    ],
+    "must_not": [
+      {"label": "wrong year-ago EPS $1.05 (an aggregator's error)", "regex": "\\$1\\.05"},
+      {"label": "claims no segment results exist", "regex": "no verified source[^.]{0,80}segment"}
+    ]
+  }
+]

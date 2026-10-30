@@ -1,0 +1,34 @@
+/* Landing page only. Entrances, photo treatment, and the Anatomy figure's tokens set to the page's warm palette. */
+.js-reveal [data-reveal] { opacity: 0; transform: translateY(24px); transition: opacity 700ms cubic-bezier(.2,.7,.2,1), transform 700ms cubic-bezier(.2,.7,.2,1); }
+.js-reveal [data-reveal][data-in] { opacity: 1; transform: none; }
+
+/* archival photographs: warm monochrome, a slow drift */
+.photo { filter: grayscale(1) sepia(.18) contrast(1.05) brightness(.82); transform: scale(1.06); transition: transform 1.6s cubic-bezier(.2,.7,.2,1); }
+[data-in] .photo, .photo:hover { transform: scale(1.0); }
+
+.iso {
+  --anatomy-paper: #10100f; --anatomy-face: #171614; --anatomy-top: #181715;
+  --anatomy-shade-0: #0e0e0d; --anatomy-shade-1: #121110; --anatomy-shade-2: #151413; --anatomy-shade-3: #181715;
+  --anatomy-lit-top: #2a2723; --anatomy-lit-shade: #1f1d1a;
+  --anatomy-hi: #ece7dd; --anatomy-mid: #77716a; --anatomy-lo: #45413b; --anatomy-faint: #2c2a26; --anatomy-lit: #fff8ea;
+  --anatomy-halo: #050505; --anatomy-dot: #ece7dd; --anatomy-red: #ec6a71; --anatomy-green: #74d39b;
+}
+[data-tier] { transition: opacity 500ms ease; will-change: transform; }
+[data-tier][data-dim="1"] { opacity: .26; }
+.callout polyline { fill: none; stroke: var(--muted); stroke-width: .7; vector-effect: non-scaling-stroke; }
+.callout text { fill: var(--fg); font: 500 9.5px var(--font-geist-mono), ui-monospace, monospace; letter-spacing: .06em; }
+.callout { animation: callout-in 450ms cubic-bezier(.2,.7,.2,1) both; }
+@keyframes callout-in { from { opacity: 0; } to { opacity: 1; } }
+/* accordion: a bar slides in beside the open item; lines and the feed card play in */
+.acc-item::before { content: ""; position: absolute; left: 0; top: 1.25rem; bottom: 1.25rem; width: 2px; background: var(--ok);
+  transform: scaleY(0); transform-origin: top; transition: transform 450ms cubic-bezier(.2,.7,.2,1); }
+.acc-item[data-open]::before { transform: scaleY(1); }
+.acc-line { animation: line-in 450ms cubic-bezier(.2,.7,.2,1) both; }
+@keyframes line-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.acc-photo { opacity: 0; transform: scale(1.06); transition: opacity 700ms ease, transform 1400ms cubic-bezier(.2,.7,.2,1); }
+.acc-photo[data-on] { opacity: 1; transform: scale(1); }
+.feed-card { animation: card-in 500ms cubic-bezier(.2,.7,.2,1) both; }
+@keyframes card-in { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) { .acc-line, .feed-card, .acc-item::before, .acc-photo { animation: none; transition: none; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .callout, .photo { animation: none; transition: none; transform: none; } }

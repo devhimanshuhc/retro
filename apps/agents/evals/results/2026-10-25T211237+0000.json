@@ -1,0 +1,296 @@
+{
+ "at": "2026-10-25T21:12:37+00:00",
+ "config": {
+  "per_objective": 6,
+  "per_source": 2,
+  "weights": {
+   "paper": 1.5,
+   "primary": 1.5,
+   "news": 1.0,
+   "other": 0.6
+  },
+  "llm": true
+ },
+ "summary": {
+  "cases": 14,
+  "hit@6": 0.857,
+  "recall@6": 0.696,
+  "mrr": 0.702,
+  "answer_accuracy": 0.857,
+  "faithfulness": 1,
+  "context_sufficient": 0.857
+ },
+ "cases": [
+  {
+   "id": "transformer-bleu",
+   "relevant_in_pool": 2,
+   "pool": 414,
+   "hit": true,
+   "recall": 0.5,
+   "rr": 0.5,
+   "ranks": [
+    2
+   ],
+   "summary": "The original Transformer achieved a BLEU score of 28.4 on the WMT 2014 English-to-German translation task, establishing a new state-of-the-art result. The big transformer model outperformed the best previously reported models (including ensembles) by more than 2.0 BLEU.",
+   "correct": true,
+   "tokens": {
+    "input_tokens": 1978,
+    "output_tokens": 667
+   },
+   "sufficient": "yes",
+   "faithfulness": 1,
+   "unsupported": []
+  },
+  {
+   "id": "gpt3-size",
+   "relevant_in_pool": 1,
+   "pool": 309,
+   "hit": true,
+   "recall": 1.0,
+   "rr": 1.0,
+   "ranks": [
+    1
+   ],
+   "summary": "GPT-3 is an autoregressive language model with 175 billion parameters, which is 10x more than any previous non-sparse language model. It was evaluated in the few-shot setting, with the model applied without any gradient updates or fine-tuning, and tasks and demonstrations specified purely through text interaction with the model.",
+   "correct": true,
+   "tokens": {
+    "input_tokens": 2162,
+    "output_tokens": 489
+   },
+   "sufficient": "yes",
+   "faithfulness": 1,
+   "unsupported": []
+  },
+  {
+   "id": "bert-objectives",
+   "relevant_in_pool": 8,
+   "pool": 495,
+   "hit": true,
+   "recall": 0.25,
+   "rr": 1.0,
+   "ranks": [
+    1
+   ],
+   "summary": "BERT uses two pre-training objectives: Masked Language Modeling (MLM) and Next Sentence Prediction (NSP). The MLM objective trains the model in a bidirectional manner, while NSP is the second task. An ablation study variant called 'No NSP' removed the next sentence prediction task while keeping the masked LM objective to demonstrate the importance of BERT's bidirectionality.",
+   "correct": true,
+   "tokens": {
+    "input_tokens": 1978,
+    "output_tokens": 571
+   },
+   "sufficient": "yes",
+   "faithfulness": 1,
+   "unsupported": []
+  },
+  {
+   "id": "nvidia-fy24-revenue",
+   "relevant_in_pool": 2,
+   "pool": 361,
+   "hit": true,
+   "recall": 1.0,
+   "rr": 1.0,
+   "ranks": [
+    1,
+    2
+   ],
+   "summary": "On February 21, 2024, Nvidia announced record full-year revenue of $60.9 billion for fiscal 2024, representing growth of 126% compared to the prior fiscal year. This milestone reflected accelerated adoption of the company's computing and AI technologies.",
+   "correct": true,
+   "tokens": {
+    "input_tokens": 2050,
+    "output_tokens": 636
+   },
+   "sufficient": "yes",
+   "faithfulness": 1,
+   "unsupported": []
+  },
+  {
+   "id": "llama2-sizes",
+   "relevant_in_pool": 1,
+   "pool": 99,
+   "hit": true,
+   "recall": 1.0,
+   "rr": 0.5,
+   "ranks": [
+    2
+   ],
+   "summary": "According to the Llama 2 paper, the model range included pretrained and fine-tuned large language models (LLMs) ranging in scale from 7 billion to 70 billion parameters. The fine-tuned versions, called Llama 2-Chat, were optimized for dialogue use cases.",
+   "correct": true,
+   "tokens": {
+    "input_tokens": 1927,
+    "output_tokens": 442
+   },
+   "sufficient": "yes",
+   "faithfulness": 1,
+   "unsupported": []
+  },
+  {
+   "id": "chinchilla-scaling",
+   "relevant_in_pool": 1,
+   "pool": 30,
+   "hit": true,
+   "recall": 1.0,
+   "rr": 1.0,
+   "ranks": [
+    1
+   ],
+   "summary": "According to research detailed in the Chinchilla paper, which trained over 400 language models ranging from 70 million to over 16 billion parameters on 5 to 500 billion tokens, for compute-optimal training, model size and the number of training tokens should be scaled equally: for every doubling of model size, the number of training tokens should also be doubled.",
+   "correct": true,
+   "tokens": {
+    "input_tokens": 1987,
+    "output_tokens": 571
+   },
+   "sufficient": "yes",
+   "faithfulness": 1,
+   "unsupported": []
+  },
+  {
+   "id": "react-method",
+   "relevant_in_pool": 1,
+   "pool": 29,
+   "hit": false,
+   "recall": 0.0,
+   "rr": 0.0,
+   "ranks": [],
+   "summary": "",
+   "correct": false,
+   "tokens": {
+    "input_tokens": 2015,
+    "output_tokens": 700
+   }
+  },
+  {
+   "id": "mast-modes",
+   "relevant_in_pool": 1,
+   "pool": 30,
+   "hit": true,
+   "recall": 1.0,
+   "rr": 0.5,
+   "ranks": [
+    2
+   ],
+   "summary": "The MAST (Multi-Agent System Failure Taxonomy) identifies 14 unique failure modes clustered into 3 categories. These categories are: (i) system design issues, (ii) inter-agent misalignment, and (iii) task verification. This taxonomy was developed through rigorous analysis of 150 traces guided by expert human annotators, achieving high inter-annotator agreement (kappa = 0.88).",
+   "correct": true,
+   "tokens": {
+    "input_tokens": 1975,
+    "output_tokens": 394
+   },
+   "sufficient": "yes",
+   "faithfulness": 1,
+   "unsupported": []
+  },
+  {
+   "id": "ssb-electrolyte",
+   "relevant_in_pool": 1,
+   "pool": 417,
+   "hit": true,
+   "recall": 1.0,
+   "rr": 1.0,
+   "ranks": [
+    1
+   ],
+   "summary": "A solid-state battery uses a solid electrolyte to conduct ions between the electrodes, instead of the liquid or gel polymer electrolytes found in conventional batteries. The solid electrolyte acts as an ideal separator that allows only lithium ions to pass through. Solid-state batteries can use metallic lithium for the anode and oxides or sulfides for the cathode, improving energy density while potentially solving many liquid electrolyte Li-ion battery problems including flammability, voltage range, unstable electrode interface formation, cycling performance, and mechanical strength.",
+   "correct": true,
+   "tokens": {
+    "input_tokens": 1905,
+    "output_tokens": 664
+   },
+   "sufficient": "yes",
+   "faithfulness": 1,
+   "unsupported": []
+  },
+  {
+   "id": "crispr-nobel",
+   "relevant_in_pool": 2,
+   "pool": 381,
+   "hit": true,
+   "recall": 0.5,
+   "rr": 1.0,
+   "ranks": [
+    1
+   ],
+   "summary": "Emmanuelle Charpentier and Jennifer Doudna received the Nobel Prize in Chemistry in 2020 for developing CRISPR gene editing. According to passage q.1, they were awarded the prize in October 2020 for their work in this field. Passage q.2 specifies they received the award 'for the development of a method for genome editing.'",
+   "correct": true,
+   "tokens": {
+    "input_tokens": 1987,
+    "output_tokens": 731
+   },
+   "sufficient": "yes",
+   "faithfulness": 1,
+   "unsupported": []
+  },
+  {
+   "id": "bitcoin-double-spend",
+   "relevant_in_pool": 2,
+   "pool": 214,
+   "hit": true,
+   "recall": 0.5,
+   "rr": 1.0,
+   "ranks": [
+    1
+   ],
+   "summary": "According to the Bitcoin whitepaper, Bitcoin solves the double-spending problem without a trusted third party by using a peer-to-peer network instead of a central authority or mint. The network timestamps transactions by hashing them into an ongoing chain of hash-based proof-of-work, creating a permanent record that cannot be altered without redoing the proof-of-work. While digital signatures allow payees to verify the chain of ownership, the key innovation is that the consensus mechanism and immutable transaction history make it computationally infeasible to double-spend coins, eliminating the need for a trusted intermediary to check every transaction.",
+   "correct": true,
+   "tokens": {
+    "input_tokens": 1896,
+    "output_tokens": 735
+   },
+   "sufficient": "yes",
+   "faithfulness": 1,
+   "unsupported": []
+  },
+  {
+   "id": "rag-memory",
+   "relevant_in_pool": 1,
+   "pool": 224,
+   "hit": true,
+   "recall": 1.0,
+   "rr": 1.0,
+   "ranks": [
+    1
+   ],
+   "summary": "Retrieval-augmented generation (RAG) models combine two kinds of memory: pre-trained parametric memory and non-parametric memory. According to the RAG paper, the parametric memory is a pre-trained seq2seq model, while the non-parametric memory is a dense vector index of Wikipedia that is accessed through a pre-trained neural retriever. The paper describes two RAG formulations: one that conditions on the same retrieved passages across the entire generated sequence, and another that can use different passages per token.",
+   "correct": true,
+   "tokens": {
+    "input_tokens": 1932,
+    "output_tokens": 601
+   },
+   "sufficient": "yes",
+   "faithfulness": 1,
+   "unsupported": []
+  },
+  {
+   "id": "actor-model",
+   "relevant_in_pool": 1,
+   "pool": 214,
+   "hit": true,
+   "recall": 1.0,
+   "rr": 0.3333333333333333,
+   "ranks": [
+    3
+   ],
+   "summary": "According to the actor model definition, when an actor receives a message, it can concurrently perform several actions: send a finite number of messages to other actors, create a finite number of new actors, and designate the behavior to be used for the next message it receives. Additionally, an actor can make local decisions and determine how to respond to the next message received. Actors may also modify their own private state, but can only affect each other indirectly through messaging, which eliminates the need for lock-based synchronization.",
+   "correct": true,
+   "tokens": {
+    "input_tokens": 1888,
+    "output_tokens": 624
+   },
+   "sufficient": "yes",
+   "faithfulness": 1,
+   "unsupported": []
+  },
+  {
+   "id": "bm25-params",
+   "relevant_in_pool": 1,
+   "pool": 306,
+   "hit": false,
+   "recall": 0.0,
+   "rr": 0.0,
+   "ranks": [],
+   "summary": "",
+   "correct": false,
+   "tokens": {
+    "input_tokens": 1997,
+    "output_tokens": 542
+   }
+  }
+ ]
+}

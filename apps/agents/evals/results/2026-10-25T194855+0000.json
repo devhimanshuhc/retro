@@ -1,0 +1,173 @@
+{
+ "at": "2026-10-25T19:48:55+00:00",
+ "config": {
+  "per_objective": 6,
+  "per_source": 2,
+  "weights": {
+   "paper": 1.5,
+   "primary": 1.5,
+   "news": 1.0,
+   "other": 0.6
+  },
+  "llm": false
+ },
+ "summary": {
+  "cases": 14,
+  "hit@6": 0.857,
+  "recall@6": 0.696,
+  "mrr": 0.702
+ },
+ "cases": [
+  {
+   "id": "transformer-bleu",
+   "relevant_in_pool": 2,
+   "pool": 418,
+   "hit": true,
+   "recall": 0.5,
+   "rr": 0.5,
+   "ranks": [
+    2
+   ]
+  },
+  {
+   "id": "gpt3-size",
+   "relevant_in_pool": 1,
+   "pool": 310,
+   "hit": true,
+   "recall": 1.0,
+   "rr": 1.0,
+   "ranks": [
+    1
+   ]
+  },
+  {
+   "id": "bert-objectives",
+   "relevant_in_pool": 8,
+   "pool": 499,
+   "hit": true,
+   "recall": 0.25,
+   "rr": 1.0,
+   "ranks": [
+    1
+   ]
+  },
+  {
+   "id": "nvidia-fy24-revenue",
+   "relevant_in_pool": 2,
+   "pool": 352,
+   "hit": true,
+   "recall": 1.0,
+   "rr": 1.0,
+   "ranks": [
+    1,
+    2
+   ]
+  },
+  {
+   "id": "llama2-sizes",
+   "relevant_in_pool": 1,
+   "pool": 100,
+   "hit": true,
+   "recall": 1.0,
+   "rr": 0.5,
+   "ranks": [
+    2
+   ]
+  },
+  {
+   "id": "chinchilla-scaling",
+   "relevant_in_pool": 1,
+   "pool": 30,
+   "hit": true,
+   "recall": 1.0,
+   "rr": 1.0,
+   "ranks": [
+    1
+   ]
+  },
+  {
+   "id": "react-method",
+   "relevant_in_pool": 1,
+   "pool": 29,
+   "hit": false,
+   "recall": 0.0,
+   "rr": 0.0,
+   "ranks": []
+  },
+  {
+   "id": "mast-modes",
+   "relevant_in_pool": 1,
+   "pool": 30,
+   "hit": true,
+   "recall": 1.0,
+   "rr": 0.5,
+   "ranks": [
+    2
+   ]
+  },
+  {
+   "id": "ssb-electrolyte",
+   "relevant_in_pool": 1,
+   "pool": 421,
+   "hit": true,
+   "recall": 1.0,
+   "rr": 1.0,
+   "ranks": [
+    1
+   ]
+  },
+  {
+   "id": "crispr-nobel",
+   "relevant_in_pool": 2,
+   "pool": 422,
+   "hit": true,
+   "recall": 0.5,
+   "rr": 1.0,
+   "ranks": [
+    1
+   ]
+  },
+  {
+   "id": "bitcoin-double-spend",
+   "relevant_in_pool": 2,
+   "pool": 220,
+   "hit": true,
+   "recall": 0.5,
+   "rr": 1.0,
+   "ranks": [
+    1
+   ]
+  },
+  {
+   "id": "rag-memory",
+   "relevant_in_pool": 1,
+   "pool": 224,
+   "hit": true,
+   "recall": 1.0,
+   "rr": 1.0,
+   "ranks": [
+    1
+   ]
+  },
+  {
+   "id": "actor-model",
+   "relevant_in_pool": 1,
+   "pool": 220,
+   "hit": true,
+   "recall": 1.0,
+   "rr": 0.3333333333333333,
+   "ranks": [
+    3
+   ]
+  },
+  {
+   "id": "bm25-params",
+   "relevant_in_pool": 1,
+   "pool": 310,
+   "hit": false,
+   "recall": 0.0,
+   "rr": 0.0,
+   "ranks": []
+  }
+ ]
+}

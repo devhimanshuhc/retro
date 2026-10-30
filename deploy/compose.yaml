@@ -1,0 +1,59 @@
+# Retro, everything in one command:  docker compose up -d   →  http://localhost:3000
+# Needs a .env next to this file (copy .env.example). Images come from RETRO_IMAGES; `--build` builds them from source.
+name: retro
+
+x-agent: &agent
+  image: ${RETRO_IMAGES:-ghcr.io/retro-agents/retro}/agents:${RETRO_VERSION:-latest}
+  build: {context: ../apps/agents}
+  env_file: .env
+  environment: &env
+    REDIS_URL: redis://redis:6379
+    MONGO_URL: mongodb://mongo:27017
+    MONGO_DB: retro
+    WEB_ORIGINS: http://localhost:${RETRO_WEB_PORT:-3000}
+  depends_on:
+    redis: {condition: service_healthy}
+    mongo: {condition: service_healthy}
+  restart: unless-stopped  # a crashed worker comes back and takes its job again
+
+services:
+  redis:
+    image: redis:7
+    command: redis-server --appendonly yes --maxmemory-policy noeviction  # queues must never evict a job
+    volumes: [redis:/data]
+    healthcheck: {test: ["CMD", "redis-cli", "ping"], interval: 5s, retries: 20}
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:8
+    volumes: [mongo:/data/db]
+    healthcheck: {test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"], interval: 5s, retries: 20}
+    restart: unless-stopped
+
+  api:
+    <<: *agent
+    command: ["uv", "run", "python", "scripts/prod_server.py"]
+    ports: ["127.0.0.1:${RETRO_API_PORT:-8000}:8000"]  # this machine only: a local Retro has no logins
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 5s
+      retries: 30
+
+  supervisor: {<<: *agent, command: ["uv", "run", "python", "-m", "app.agents.supervisor"]}
+  research: {<<: *agent, command: ["uv", "run", "python", "-m", "app.agents.research"]}
+  writer: {<<: *agent, command: ["uv", "run", "python", "-m", "app.agents.writer"]}
+  critic: {<<: *agent, command: ["uv", "run", "python", "-m", "app.agents.critic"]}
+
+  web:
+    image: ${RETRO_IMAGES:-ghcr.io/retro-agents/retro}/web:${RETRO_VERSION:-latest}
+    build:
+      context: ../apps/web
+      args: {NEXT_PUBLIC_API_URL: "http://localhost:${RETRO_API_PORT:-8000}"}
+    ports: ["127.0.0.1:${RETRO_WEB_PORT:-3000}:3000"]
+    depends_on:
+      api: {condition: service_healthy}
+    restart: unless-stopped
+
+volumes:
+  redis:
+  mongo:

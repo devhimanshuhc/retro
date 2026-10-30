@@ -1,0 +1,77 @@
+{
+ "summary": {
+  "runs": 3,
+  "completed": 3,
+  "fact_recall": 0.476,
+  "fact_recall_95ci": [
+   0.283,
+   0.676
+  ],
+  "wrong_facts": 2,
+  "source_quality_mean": 0.3,
+  "tokens_mean": 144940,
+  "seconds_median": 144,
+  "drafts_mean": 2.33
+ },
+ "runs": [
+  {
+   "case": "nvidia-q2-fy27",
+   "run_id": "f9d3435d965b4d2bad9cbb12a8b91d84",
+   "status": "completed",
+   "drafts": 3,
+   "facts_found": 4,
+   "facts_total": 7,
+   "missing": [
+    "Data Center revenue $89.0B",
+    "Edge Computing revenue $7.2B",
+    "year-ago non-GAAP EPS $1.01"
+   ],
+   "wrong": [
+    "wrong year-ago EPS $1.05 (an aggregator's error)",
+    "claims no segment results exist"
+   ],
+   "source_quality": 0.0,
+   "sources": 4,
+   "tokens": 298548,
+   "seconds": 144
+  },
+  {
+   "case": "nvidia-q2-fy27",
+   "run_id": "a656559db9084153b93b43d2ae64e0f2",
+   "status": "completed",
+   "drafts": 3,
+   "facts_found": 3,
+   "facts_total": 7,
+   "missing": [
+    "Edge Computing revenue $7.2B",
+    "non-GAAP EPS $2.22",
+    "year-ago non-GAAP EPS $1.01",
+    "Q3 revenue outlook $108B"
+   ],
+   "wrong": [],
+   "source_quality": 0.5,
+   "sources": 6,
+   "tokens": 77568,
+   "seconds": 188
+  },
+  {
+   "case": "nvidia-q2-fy27",
+   "run_id": "211f36493514412a945a9d63997f64a9",
+   "status": "completed",
+   "drafts": 1,
+   "facts_found": 3,
+   "facts_total": 7,
+   "missing": [
+    "Edge Computing revenue $7.2B",
+    "year-ago non-GAAP EPS $1.01",
+    "Q3 revenue outlook $108B",
+    "GAAP net income $59.7B"
+   ],
+   "wrong": [],
+   "source_quality": 0.4,
+   "sources": 5,
+   "tokens": 58705,
+   "seconds": 128
+  }
+ ]
+}

@@ -1,0 +1,52 @@
+{
+ "summary": {
+  "runs": 2,
+  "completed": 2,
+  "fact_recall": 0.857,
+  "fact_recall_95ci": [
+   0.601,
+   0.96
+  ],
+  "wrong_facts": 1,
+  "source_quality_mean": 0.67,
+  "tokens_mean": 103890,
+  "seconds_median": 180.0,
+  "drafts_mean": 2.5
+ },
+ "runs": [
+  {
+   "case": "nvidia-q2-fy27",
+   "run_id": "83b2d5139b114ec28757c17444a21a25",
+   "status": "completed",
+   "drafts": 3,
+   "facts_found": 6,
+   "facts_total": 7,
+   "missing": [
+    "year-ago non-GAAP EPS $1.01"
+   ],
+   "wrong": [],
+   "source_quality": 0.33,
+   "sources": 6,
+   "tokens": 121382,
+   "seconds": 193
+  },
+  {
+   "case": "nvidia-q2-fy27",
+   "run_id": "ac2e3a3df56f4049ac4a0b79edcf325a",
+   "status": "completed",
+   "drafts": 2,
+   "facts_found": 6,
+   "facts_total": 7,
+   "missing": [
+    "Edge Computing revenue $7.2B"
+   ],
+   "wrong": [
+    "claims no segment results exist"
+   ],
+   "source_quality": 1.0,
+   "sources": 3,
+   "tokens": 86399,
+   "seconds": 167
+  }
+ ]
+}

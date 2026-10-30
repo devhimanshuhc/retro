@@ -1,0 +1,19 @@
+{
+ "attention": "https://arxiv.org/pdf/1706.03762",
+ "wiki-transformer": "https://en.wikipedia.org/wiki/Transformer_(deep_learning_architecture)",
+ "gpt3": "https://arxiv.org/abs/2005.14165",
+ "wiki-gpt3": "https://en.wikipedia.org/wiki/GPT-3",
+ "bert": "https://arxiv.org/pdf/1810.04805",
+ "nvidia-fy24": "https://nvidianews.nvidia.com/news/nvidia-announces-financial-results-for-fourth-quarter-and-fiscal-2024",
+ "wiki-nvidia": "https://en.wikipedia.org/wiki/Nvidia",
+ "llama2": "https://arxiv.org/abs/2307.09288",
+ "chinchilla": "https://arxiv.org/abs/2203.15556",
+ "react": "https://arxiv.org/abs/2210.03629",
+ "mast": "https://arxiv.org/abs/2503.13657",
+ "wiki-ssb": "https://en.wikipedia.org/wiki/Solid-state_battery",
+ "wiki-crispr": "https://en.wikipedia.org/wiki/CRISPR_gene_editing",
+ "bitcoin": "https://bitcoin.org/bitcoin.pdf",
+ "rag": "https://arxiv.org/abs/2005.11401",
+ "wiki-actor": "https://en.wikipedia.org/wiki/Actor_model",
+ "wiki-bm25": "https://en.wikipedia.org/wiki/Okapi_BM25"
+}
