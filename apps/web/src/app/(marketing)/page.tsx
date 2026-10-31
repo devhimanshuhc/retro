@@ -12,6 +12,7 @@ import { Wordmark } from "@/components/Mark";
 
 import "../../../vendor/anatomy/iso.css";
 import "./landing.css";
+import { START_URL } from "@/lib/api";
 
 export const metadata: Metadata = {
   title: "Retro · research agents you can leave running",
@@ -75,7 +76,7 @@ export default function Landing() {
             ))}
           </ul>
           <div className="flex items-center gap-3">
-            <Link href="/app" className="btn-primary">Start a run</Link>
+            <Link href={START_URL} className="btn-primary">Start a run</Link>
           </div>
         </nav>
       </header>
@@ -93,7 +94,7 @@ export default function Landing() {
                 <span className="text-muted">They talk only through queues, so a crash, a rate limit or a bad answer slows a run down instead of losing it.</span>
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <Link href="/app" className="btn-primary">Start a run <span aria-hidden className="arrow">→</span></Link>
+                <Link href={START_URL} className="btn-primary">Start a run <span aria-hidden className="arrow">→</span></Link>
                 <a href="#how" className="btn-ghost">See how it works</a>
               </div>
             </div>
@@ -235,7 +236,7 @@ export default function Landing() {
             <h2 id="cta-h" data-reveal className="max-w-[18ch] font-serif text-4xl leading-[1.05] tracking-tight sm:text-6xl">
               Ask a question. Watch it get answered.
             </h2>
-            <Link data-reveal href="/app" className="btn-primary mt-10">Start a run <span aria-hidden className="arrow">→</span></Link>
+            <Link data-reveal href={START_URL} className="btn-primary mt-10">Start a run <span aria-hidden className="arrow">→</span></Link>
           </div>
         </section>
         <div aria-hidden className="border-t border-line"><GlyphField /></div>
@@ -251,7 +252,7 @@ export default function Landing() {
             </p>
           </div>
           <div className="grid grid-cols-2 gap-8">
-            <FooterCol title="Product" links={[["Start a run", "/app"], ["How it works", "#how"], ["Agents", "#agents"]]} />
+            <FooterCol title="Product" links={[["Start a run", START_URL], ["How it works", "#how"], ["Agents", "#agents"]]} />
             <FooterCol title="Reliability" links={[["Failure modes", "#failures"], ["Dead letters", "/dead-letters"]]} />
           </div>
         </div>

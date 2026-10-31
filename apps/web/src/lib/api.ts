@@ -1,6 +1,8 @@
 import type { ArtifactSummary, DocumentInfo, LlmSettings, Provider, Connector, ConnectorStatus, ConnectSession, DeadLetter, DocCreated, QueueCounts, RunStatus, RunSummary, WorkerInfo, WorkflowCreated, WorkflowRun } from "./types";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+/** Where "Start a run" on the landing page goes: the app locally, the GitHub repo on the public site. */
+export const START_URL = process.env.NEXT_PUBLIC_START_URL ?? "/app";
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
