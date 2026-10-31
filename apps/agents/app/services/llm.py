@@ -18,10 +18,10 @@ from claude_agent_sdk import (AssistantMessage, ClaudeAgentOptions, ClaudeSDKErr
 import config
 from app.services import progress
 
-MODELS = {"supervisor": config.SUPERVISOR_MODEL, "research": config.RESEARCH_MODEL,
+MODELS = {"router": config.ROUTER_MODEL, "supervisor": config.SUPERVISOR_MODEL, "research": config.RESEARCH_MODEL,
           "write": config.WRITER_MODEL, "critic": config.CRITIC_MODEL}
 IN_KEYS = ("input_tokens", "cache_creation_input_tokens", "cache_read_input_tokens")  # the CLI caches prompts
-OPENAI_MODELS = {"supervisor": config.OPENAI_SUPERVISOR_MODEL, "research": config.OPENAI_RESEARCH_MODEL,
+OPENAI_MODELS = {"router": config.OPENAI_ROUTER_MODEL, "supervisor": config.OPENAI_SUPERVISOR_MODEL, "research": config.OPENAI_RESEARCH_MODEL,
                  "write": config.OPENAI_WRITER_MODEL, "critic": config.OPENAI_CRITIC_MODEL}
 OPENAI_URL = "https://api.openai.com/v1/responses"
 OPENAI_TOOLS = {"WebSearch": {"type": "web_search"}}
@@ -93,7 +93,7 @@ async def complete(agent: str, prompt: str, *, system: str, schema: dict | None 
                     if isinstance(b, ToolUseBlock) and b.name not in (*tools, "StructuredOutput"):
                         # a tool it wasn't given (e.g. a user's connector): stop the call rather than let it run
                         raise RuntimeError(f"model tried to use a tool it wasn't given: {b.name}")
-                    if isinstance(b, (ToolUseBlock, ServerToolUseBlock)):
+                    if isinstance(b, (ToolUseBlock, ServerToolUseBlock)) and b.name != "StructuredOutput":  # internal
                         arg = (b.input or {}).get("query") or (b.input or {}).get("url") or ""
                         await progress.report("tool", f"{b.name}: {arg}".rstrip(": "), tool=b.name)
             if isinstance(m, ResultMessage):

@@ -1,5 +1,10 @@
 """Request rate limits in Redis: a fixed window per key, shared by every API process."""
+from contextvars import ContextVar
+
 from redis.asyncio import Redis
+
+# (redis, key prefix) for the job in hand, set by the Actor, so an agent can count against a limit
+client: ContextVar[tuple[Redis, str] | None] = ContextVar("limits_client", default=None)
 
 
 async def hit(redis: Redis, key: str, limit: int, window_s: int) -> int | None:

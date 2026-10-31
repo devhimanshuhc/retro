@@ -31,6 +31,8 @@ def fake_llm(calls: list, reports=(GOOD_REPORT,), scores=(GOOD_SCORES,)):
     """Stands in for llm.complete. Writer/critic answers come from the lists in order (last one repeats)."""
     async def complete(agent, prompt, **kw):
         calls.append((agent, prompt, kw))
+        if agent == "router":   # routing call (schema) or the report summary (plain text)
+            return Completion("Revenue was $35.1B in Q3.", {"intent": "research", "reply": "I'll research that.", "research_request": ""}, USAGE)
         if agent == "supervisor":
             return Completion("", PLAN, USAGE)
         if agent == "research":

@@ -26,7 +26,7 @@ def build_prompt(run: WorkflowRun, revision: int) -> str:
         f"{questions.get(f.objective_id, f.objective_id)}\n{f.summary}\n"
         + "\n".join(f'[{num[s.url]}] ({s.kind}) "{s.quote}"' for s in f.sources)
         for f in run.findings)
-    parts = [f"Request: {run.prompt}",
+    parts = [f"Request: {run.request}",
              "Section headings:\n" + "\n".join(f"## {h}" for h in run.plan.outline),
              f"Findings:\n{findings}",
              "Sources:\n" + "\n".join(f"[{i}] {s.title} ({s.url})" for i, s in enumerate(sources, 1))]
@@ -55,7 +55,8 @@ async def handle(run: WorkflowRun, msg: AgentMessage) -> Outcome:
                           else f"Writing draft {msg.revision + 1} from {len(run.findings)} findings"
                           + (f", fixing {fixes} reviewer points" if fixes else ""))
     c = await llm.complete("write", build_prompt(run, msg.revision), system=SYSTEM)
-    sources = "\n".join(f"{i}. [{s.title}]({s.url})" for i, s in enumerate(numbered_sources(run.findings), 1))
+    sources = "\n".join(f"{i}. {s.title} (your file)" if s.kind == "file" else f"{i}. [{s.title}]({s.url})"
+                        for i, s in enumerate(numbered_sources(run.findings), 1))
     report = f"{c.text.strip()}\n\n## Sources\n{sources}\n"
     await progress.report("drafted", f"Draft {msg.revision + 1} ready: ~{len(c.text.split())} words, "
                           f"{len(set(re.findall(r'\[(\d+)\]', c.text)))} sources cited")

@@ -72,12 +72,12 @@ async def test_under_budget_runs_normally(db, over_budget_actor, monkeypatch):
     assert called == [run.id]
 
 
-async def test_starting_runs_is_rate_limited_per_client(api, prefix, monkeypatch):
-    monkeypatch.setattr(config, "RUNS_PER_WINDOW", 2)
+async def test_messages_are_rate_limited_per_client(api, prefix, monkeypatch):
+    monkeypatch.setattr(config, "MESSAGES_PER_WINDOW", 2)
     assert [(await api.post("/workflows", json={"prompt": "p"})).status_code for _ in range(2)] == [202, 202]
     r = await api.post("/workflows", json={"prompt": "p"})
     assert r.status_code == 429 and 0 < int(r.headers["retry-after"]) <= config.RUN_WINDOW_S
-    assert "too many runs" in r.json()["detail"]
+    assert "too many messages" in r.json()["detail"]
     for name in queues.ALL_QUEUES:
         q = queues.open_queue(name, prefix=prefix)
         await q.obliterate(force=True)

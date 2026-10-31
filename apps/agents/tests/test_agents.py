@@ -118,7 +118,7 @@ async def test_pipeline_completes_through_four_actors(db, prefix, cleanup_queues
             "supervisor": "done", "research": "done", "write": "done", "critic": "done",
         }
         assert run.revision == 1 and [r.critique.passed for r in run.revisions] == [False, True]
-        assert [c[0] for c in calls] == ["supervisor", "research", "research", "write", "write", "critic"]
+        assert [c[0] for c in calls] == ["supervisor", "research", "research", "write", "write", "critic", "router"]
         assert run.usage["write"].input_tokens == 20 and run.plan and len(run.findings) == 2
         assert run.usage["research"].input_tokens == 20  # search + write calls
     finally:

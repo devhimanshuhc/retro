@@ -87,9 +87,9 @@ class _Text(HTMLParser):
             self.parts.append(data)
 
 
-def page_text(body: bytes, content_type: str) -> str:
+def page_text(body: bytes, content_type: str, pages: int = 60) -> str:
     if "pdf" in content_type or body[:5] == b"%PDF-":
-        return " ".join(p.extract_text() or "" for p in PdfReader(io.BytesIO(body)).pages[:60])
+        return " ".join(p.extract_text() or "" for p in PdfReader(io.BytesIO(body)).pages[:pages])
     parser = _Text()
     parser.feed(body.decode("utf-8", errors="replace"))
     return " ".join(parser.parts)

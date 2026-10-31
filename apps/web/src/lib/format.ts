@@ -16,6 +16,7 @@ export function linkCitations(md: string): string {
 }
 
 export function domain(url: string): string {
+  if (url.startsWith("doc://")) return "your file";
   try {
     return new URL(url).hostname.replace(/^www\./, "");
   } catch {

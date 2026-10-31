@@ -16,7 +16,7 @@ from app.models.api import WorkerInfo
 from app.models.events import Event
 from app.models.messages import AgentMessage
 from app.models.run import TERMINAL, NextHop, Usage, WorkflowRun, now
-from app.services import api_keys, dlq, events, llm, progress, queues, state, workers
+from app.services import api_keys, dlq, documents, events, limits, llm, progress, queues, state, workers
 
 
 @dataclass
@@ -111,6 +111,8 @@ class Actor:
 
         creds = llm.credentials.set(await api_keys.credentials(self.db))  # per job: a new key needs no restart
         sink = progress.sink.set(on_progress)
+        store = documents.store.set(self.db)
+        lim = limits.client.set((self._redis, self.prefix))
         try:
             used = run.tokens_used()
             # the budget stops extra rewrites, never the first report: research already paid for it
@@ -127,6 +129,8 @@ class Actor:
             raise
         finally:
             progress.sink.reset(sink)
+            documents.store.reset(store)
+            limits.client.reset(lim)
             llm.credentials.reset(creds)
         hop = None
         if outcome.next_queue:

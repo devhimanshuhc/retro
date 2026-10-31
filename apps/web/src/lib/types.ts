@@ -3,8 +3,8 @@
 
 /** app/models/run.py */
 export type RunStatus = "submitted" | "working" | "input-required" | "completed" | "failed" | "canceled";
-export type StepName = "supervisor" | "research" | "write" | "critic";
-export type SourceKind = "paper" | "primary" | "news" | "other";
+export type StepName = "router" | "supervisor" | "research" | "write" | "critic";
+export type SourceKind = "paper" | "primary" | "news" | "other" | "file"; // file: one the user uploaded (url doc://<id>)
 
 export type NextHop = { queue: string; revision: number };
 export type StepState = {
@@ -26,7 +26,10 @@ export type Scores = {
 };
 /** scores is null when the deterministic checks failed and the LLM rubric was skipped. */
 export type Critique = { passed: boolean; errors: string[]; scores: Scores | null };
-export type Revision = { revision: number; report_md: string; created_at: string; critique: Critique | null };
+export type Revision = { revision: number; report_md: string; created_at: string; critique: Critique | null; summary?: string | null };
+/** One message of the conversation the router handles (models/run.Turn). */
+export type Turn = { role: "user" | "assistant"; text: string; created_at: string };
+export type Intent = "chat" | "decline" | "research";
 export type Usage = { input_tokens: number; output_tokens: number };
 
 /** A change the user asked for after the report was done; the writer applies it starting at `revision`. */
@@ -35,6 +38,11 @@ export type EditRequest = { revision: number; instruction: string; created_at: s
 export type WorkflowRun = {
   id: string;
   prompt: string;
+  turns?: Turn[];
+  intent?: Intent | null;
+  brief?: string | null;
+  document_ids: string[];
+  web: boolean;
   status: RunStatus;
   revision: number;
   steps: Partial<Record<StepName, StepState>>;
@@ -53,7 +61,7 @@ export type WorkflowRun = {
 export type WorkflowCreate = { prompt: string };
 export type WorkflowCreated = { workflow_run_id: string };
 export type EditCreate = { instruction: string };
-/** app/models/api.py: connectors (Nango). */
+/** app/models/api.py: connectors (Google Docs). */
 export type Provider = "anthropic" | "openai";
 /** GET /settings/llm: the provider the agents use and where each key comes from (never the keys). active null = not set up. */
 export type LlmSettings = {
@@ -61,8 +69,8 @@ export type LlmSettings = {
   providers: { id: Provider; name: string; source: "app" | "env" | "login" | null }[];
 };
 export type ConnectorStatus = { configured: boolean; connected: boolean };
-export type Connector = { id: string; name: string; description: string; configured: boolean; connected: boolean; account: string | null };
-export type ConnectSession = { token: string };
+export type Connector = { id: string; name: string; description: string; configured: boolean; connected: boolean; account: string | null; redirect_uri: string | null };
+export type ConnectSession = { url: string };
 export type DocCreated = { id: string; url: string };
 /** GET /artifacts: a finished report. */
 export type ArtifactSummary = {
@@ -129,3 +137,5 @@ export type RunEvent = {
   ts: string;
   data: Record<string, unknown>;
 };
+
+export type DocumentInfo = { id: string; name: string; size: number; chars: number; created_at: string };

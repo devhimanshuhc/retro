@@ -9,7 +9,7 @@ const ev = (type: EventType, agent: StepName | null, data: Record<string, unknow
   ({ id: `e${n++}`, type, workflow_run_id: "r", agent, ts, data });
 
 const run = (over: Partial<WorkflowRun> = {}): WorkflowRun => ({
-  id: "r", prompt: "p", status: "working", revision: 0, steps: {}, plan: null, findings: [], revisions: [],
+  id: "r", prompt: "p", document_ids: [], web: true, status: "working", revision: 0, steps: {}, plan: null, findings: [], revisions: [],
   warnings: [], usage: {}, edits: [], events: [], created_at: "", updated_at: "", ...over,
 });
 const snap = (over: Partial<WorkflowRun> = {}) => ev("run.snapshot", null, { run: run(over) });

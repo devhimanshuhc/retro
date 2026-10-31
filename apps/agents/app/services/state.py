@@ -5,7 +5,7 @@ from pymongo.asynchronous.database import AsyncDatabase
 
 import config
 from app.models.api import ArtifactSummary, RunSummary
-from app.models.run import TERMINAL, EditRequest, NextHop, RunUpdate, StepName, StepState, WorkflowRun, now
+from app.models.run import TERMINAL, EditRequest, NextHop, RunUpdate, StepName, StepState, Turn, WorkflowRun, now
 
 
 def connect(url: str = config.MONGO_URL) -> AsyncMongoClient:
@@ -52,8 +52,8 @@ async def list_artifacts(db: AsyncDatabase, limit: int = 100) -> list[ArtifactSu
     return out
 
 
-async def create_run(db: AsyncDatabase, prompt: str) -> WorkflowRun:
-    run = WorkflowRun(prompt=prompt)
+async def create_run(db: AsyncDatabase, prompt: str, document_ids: list[str] = (), web: bool = True) -> WorkflowRun:
+    run = WorkflowRun(prompt=prompt, turns=[Turn(role="user", text=prompt)], document_ids=list(document_ids), web=web)
     await runs(db).insert_one(run.model_dump(by_alias=True))
     return run
 
@@ -101,6 +101,23 @@ async def request_edit(db: AsyncDatabase, run_id: str, instruction: str) -> Work
         return_document=ReturnDocument.AFTER,
     )
     return WorkflowRun.model_validate(doc) if doc else None
+
+
+async def add_message(db: AsyncDatabase, run_id: str, text: str) -> WorkflowRun | None:
+    """A follow-up message on a finished chat (no research started): record it and set the run working, in one
+    conditional write. None if the run isn't a finished chat."""
+    t = now()
+    doc = await runs(db).find_one_and_update(
+        {"_id": run_id, "status": "completed", "intent": {"$in": ["chat", "decline"]}},
+        {"$set": {"status": "working", "updated_at": t}, "$push": {"turns": Turn(role="user", text=text, created_at=t).model_dump()}},
+        return_document=ReturnDocument.AFTER,
+    )
+    return WorkflowRun.model_validate(doc) if doc else None
+
+
+def user_turn(run: WorkflowRun) -> int:
+    """The router's revision for the latest message: 0 for the first, 1 for the next…"""
+    return max(0, sum(t.role == "user" for t in run.turns) - 1)
 
 
 async def claim_step(db: AsyncDatabase, run_id: str, step: StepName, revision: int) -> WorkflowRun | None:

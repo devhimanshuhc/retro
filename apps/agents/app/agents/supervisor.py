@@ -11,7 +11,7 @@ Stay strictly within the scope of the request."""
 
 async def handle(run: WorkflowRun, msg: AgentMessage) -> Outcome:
     await progress.report("planning", "Breaking the request into research questions and report sections")
-    c = await llm.complete("supervisor", run.prompt, system=SYSTEM, schema=Plan.model_json_schema())
+    c = await llm.complete("supervisor", run.request, system=SYSTEM, schema=Plan.model_json_schema())
     plan = Plan.model_validate(c.data)  # a bad plan raises, so the job retries
     await progress.report("planned", f"Plan ready: {len(plan.objectives)} questions, {len(plan.outline)} sections",
                           questions=[o.question for o in plan.objectives], outline=plan.outline)

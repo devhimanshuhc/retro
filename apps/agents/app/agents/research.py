@@ -10,11 +10,11 @@ import config
 from app.agents.base import Outcome, main
 from app.models.messages import AgentMessage
 from app.models.run import Finding, Source, SourceKind, Usage, WorkflowRun
-from app.services import llm, progress, queues, scholar, sources
+from app.services import documents, llm, progress, queues, scholar, sources
 
 PER_OBJECTIVE = 6  # passages the LLM sees per objective
 PER_SOURCE = 2     # of those, at most this many from one page, so one source can't crowd out the rest
-WEIGHT = {"paper": 2.0, "primary": 2.0, "news": 0.8, "other": 0.5}  # on equal relevance, prefer stronger sources
+WEIGHT = {"file": 2.0, "paper": 2.0, "primary": 2.0, "news": 0.8, "other": 0.5}  # on equal relevance, prefer stronger sources
 log = logging.getLogger("agent.research")
 
 SEARCH = """You find sources for a research brief. For each objective, run 1-2 web searches and pick 2-4 result URLs
@@ -32,16 +32,18 @@ from the pages listed; nothing else is known. For each objective: a factual summ
 numbers, dates, who said it) that states only what the passages say, and passage_ids listing every passage you used.
 If good sources disagree, say so. If the passages don't answer the objective, return empty passage_ids.
 Never use outside knowledge.
-Passages numbered [d.N] are whole official documents or papers, split in order: any objective may cite them, and
+Passages numbered [d.N] are whole official documents, papers or the user's own files, split in order: any objective may cite them, and
 they are the most reliable source, so prefer their figures and include every relevant number they state
 (e.g. results, segment figures, prior-year comparisons, outlook)."""
 
+NOTHING_IN_FILES = "the attached files don't answer the questions asked; attach other files or search the web too"
+STRONG = ("file", "primary", "paper")  # the user's own files count as authoritative, like official sources
 WHOLE_CHARS = 30_000  # official documents/papers read in full per run, ~7.5k tokens; longer ones are ranked as usual
 
 
 def whole_documents(cands: list["Candidate"], texts: dict[str, str]) -> list[tuple["Candidate", str]]:
     """Every passage of the readable primary/paper pages that fit in WHOLE_CHARS, shortest pages first."""
-    pages = {c.url: c for c in cands if c.kind in ("primary", "paper") and c.url in texts}
+    pages = {c.url: c for c in cands if c.kind in STRONG and c.url in texts}
     out, used = [], 0
     for c in sorted(pages.values(), key=lambda c: len(texts[c.url])):
         if used + len(texts[c.url]) > WHOLE_CHARS:
@@ -53,7 +55,7 @@ def whole_documents(cands: list["Candidate"], texts: dict[str, str]) -> list[tup
 
 class Candidate(BaseModel):
     objective_id: str
-    url: str = Field(pattern=r"^https?://")
+    url: str = Field(pattern=r"^(https?|doc)://")
     title: str
     kind: SourceKind
 
@@ -85,7 +87,7 @@ same document (e.g. the company's own newsroom instead of a filing mirror). Use 
 def strong_share(cands: list[Candidate], texts: dict[str, str]) -> float:
     """Share of distinct readable pages that are papers or primary sources."""
     kinds = {c.url: c.kind for c in cands if c.url in texts}
-    return sum(k in ("paper", "primary") for k in kinds.values()) / len(kinds) if kinds else 0.0
+    return sum(k in STRONG for k in kinds.values()) / len(kinds) if kinds else 0.0
 
 
 async def scholarly(objectives: dict[str, str]) -> list[tuple[Candidate, str]]:
@@ -139,6 +141,10 @@ async def write_findings(brief: str, objectives: dict[str, str], passages: dict,
     return findings, w
 
 
+def web_url(url: str) -> bool:
+    return url.startswith(("https://", "http://"))  # a doc:// URL from the model must not pass as the user's file
+
+
 def brief_for(prompt: str, objectives: dict[str, str]) -> str:
     return f"Request: {prompt}\n\nObjectives:\n" + "\n".join(f"- {k}: {q}" for k, q in objectives.items())
 
@@ -147,59 +153,75 @@ async def handle(run: WorkflowRun, msg: AgentMessage) -> Outcome:
     if run.plan is None:
         raise UnrecoverableError("research needs a plan")
     objectives = {o.id: o.question for o in run.plan.objectives}
-    brief = brief_for(run.prompt, objectives)
+    brief = brief_for(run.request, objectives)
 
-    # 1. search only: small results, no page contents in the LLM context
-    await progress.report("searching", f"Searching the web for sources on {len(objectives)} questions")
-    s = await llm.complete("research", brief, system=SEARCH, schema=Candidates.model_json_schema(),
-                           tools=["WebSearch"], max_turns=10)
-    cands = [c.model_copy(update={"kind": sources.kind_of(c.url, c.kind)})  # the site decides the kind, not the guess
-             for c in Candidates.model_validate(s.data).candidates if c.objective_id in objectives]
+    # 0. the user's own files: their text was pulled out on upload, so every objective can read every file
+    docs = await documents.load(documents.store.get(), run.document_ids) if run.document_ids else []
+    cands, texts, dropped, files = [], {}, [], []
+    for d in docs:
+        url = documents.SCHEME + d["_id"]
+        texts[url] = d["text"]
+        files += [Candidate(objective_id=oid, url=url, title=d["name"], kind="file") for oid in objectives]
+    cands += files
+    if docs:
+        await progress.report("files", f"Reading {len(docs)} of your files",
+                              pages=[{"url": documents.SCHEME + d["_id"], "title": d["name"], "kind": "file"} for d in docs])
 
-    kinds = Counter(c.kind for c in cands)
-    await progress.report("found", f"Picked {len(cands)} candidate pages ("
-                          + ", ".join(f"{n} {k}" for k, n in kinds.most_common()) + ")",
-                          pages=[{"url": c.url, "title": c.title, "kind": c.kind} for c in cands])
+    s = retry = None
+    if run.web:
+        # 1. search only: small results, no page contents in the LLM context
+        await progress.report("searching", f"Searching the web for sources on {len(objectives)} questions")
+        s = await llm.complete("research", brief, system=SEARCH, schema=Candidates.model_json_schema(),
+                               tools=["WebSearch"], max_turns=10)
+        cands += [c.model_copy(update={"kind": sources.kind_of(c.url, c.kind)})  # the site decides the kind, not the guess
+                 for c in Candidates.model_validate(s.data).candidates if c.objective_id in objectives and web_url(c.url)]
 
-    # 2. fetch + chunk + rank in code: no tokens
-    await progress.report("fetching", f"Reading {len(cands)} pages (HTML and PDF)")
-    texts, dropped = await sources.fetch(c.url for c in cands)
-    await progress.report("fetched", f"Read {len(texts)} of {len(cands)} pages"
-                          + (f", {len(dropped)} unreachable" if dropped else ""), dropped=dropped)
-    log.info("run=%s candidates=%d %s fetched=%d", run.id, len(cands), dict(kinds), len(texts))
+        found = cands[len(files):]
+        kinds = Counter(c.kind for c in found)
+        await progress.report("found", f"Picked {len(found)} candidate pages ("
+                              + ", ".join(f"{n} {k}" for k, n in kinds.most_common()) + ")",
+                              pages=[{"url": c.url, "title": c.title, "kind": c.kind} for c in found])
 
-    # 2b. papers from OpenAlex: real papers with their abstracts, which no publisher wall can block
-    papers = await scholarly(objectives)
-    for c, text in papers:
-        cands.append(c)
-        texts[c.url] = text
-    if papers:
-        await progress.report("papers", f"Added {len(papers)} research papers from OpenAlex",
-                              pages=[{"url": c.url, "title": c.title, "kind": c.kind} for c, _ in papers])
+        # 2. fetch + chunk + rank in code: no tokens
+        await progress.report("fetching", f"Reading {len(found)} pages (HTML and PDF)")
+        web_texts, dropped = await sources.fetch(c.url for c in found)
+        texts.update(web_texts)
+        await progress.report("fetched", f"Read {len(web_texts)} of {len(found)} pages"
+                              + (f", {len(dropped)} unreachable" if dropped else ""), dropped=dropped)
+        log.info("run=%s candidates=%d %s fetched=%d", run.id, len(cands), dict(kinds), len(web_texts))
 
-    # 2c. too few papers or official sources made it through: one more search aimed only at those
-    retry = None
-    spent = run.tokens_used() + s.usage["input_tokens"] + s.usage["output_tokens"]
-    if strong_share(cands, texts) < MIN_STRONG and spent < config.RUN_TOKEN_BUDGET * RETRY_BUDGET_SHARE:
-        failed = [d for d in dropped]
-        await progress.report("searching", f"Only {strong_share(cands, texts):.0%} of readable sources are papers or "
-                              "official; searching again for official sources")
-        retry = await llm.complete("research", brief + ("\n\nThese pages failed to load; find other copies of the "
-                                   "same documents:\n" + "\n".join(f"- {d}" for d in failed) if failed else ""),
-                                   system=PRIMARY_SEARCH, schema=Candidates.model_json_schema(),
-                                   tools=["WebSearch"], max_turns=5)  # capped: the first full retry cost ~400k tokens
-        seen = {c.url for c in cands}
-        more = [c.model_copy(update={"kind": sources.kind_of(c.url, c.kind)})
-                for c in Candidates.model_validate(retry.data).candidates if c.objective_id in objectives and c.url not in seen]
-        more_texts, more_dropped = await sources.fetch(c.url for c in more)
-        cands += more
-        texts.update(more_texts)
-        dropped += more_dropped
-        await progress.report("fetched", f"Read {len(more_texts)} of {len(more)} more pages; "
-                              f"{strong_share(cands, texts):.0%} of readable sources are now papers or official",
-                              dropped=more_dropped)
+        # 2b. papers from OpenAlex: real papers with their abstracts, which no publisher wall can block
+        papers = await scholarly(objectives)
+        for c, text in papers:
+            cands.append(c)
+            texts[c.url] = text
+        if papers:
+            await progress.report("papers", f"Added {len(papers)} research papers from OpenAlex",
+                                  pages=[{"url": c.url, "title": c.title, "kind": c.kind} for c, _ in papers])
 
-    passages, blocks = retrieve(objectives, cands, texts, run.prompt)
+        # 2c. too few papers or official sources made it through: one more search aimed only at those
+        spent = run.tokens_used() + s.usage["input_tokens"] + s.usage["output_tokens"]
+        if strong_share(cands, texts) < MIN_STRONG and spent < config.RUN_TOKEN_BUDGET * RETRY_BUDGET_SHARE:
+            failed = [d for d in dropped]
+            await progress.report("searching", f"Only {strong_share(cands, texts):.0%} of readable sources are papers or "
+                                  "official; searching again for official sources")
+            retry = await llm.complete("research", brief + ("\n\nThese pages failed to load; find other copies of the "
+                                       "same documents:\n" + "\n".join(f"- {d}" for d in failed) if failed else ""),
+                                       system=PRIMARY_SEARCH, schema=Candidates.model_json_schema(),
+                                       tools=["WebSearch"], max_turns=5)  # capped: the first full retry cost ~400k tokens
+            seen = {c.url for c in cands}
+            more = [c.model_copy(update={"kind": sources.kind_of(c.url, c.kind)})
+                    for c in Candidates.model_validate(retry.data).candidates
+                    if c.objective_id in objectives and c.url not in seen and web_url(c.url)]
+            more_texts, more_dropped = await sources.fetch(c.url for c in more)
+            cands += more
+            texts.update(more_texts)
+            dropped += more_dropped
+            await progress.report("fetched", f"Read {len(more_texts)} of {len(more)} more pages; "
+                                  f"{strong_share(cands, texts):.0%} of readable sources are now papers or official",
+                                  dropped=more_dropped)
+
+    passages, blocks = retrieve(objectives, cands, texts, run.request)
     # short official documents and papers are read whole: keyword ranking misses their tables and wording
     # ("outlook" for "guidance"), and they hold the facts a report most needs
     whole = whole_documents(cands, texts)
@@ -207,8 +229,10 @@ async def handle(run: WorkflowRun, msg: AgentMessage) -> Outcome:
         passages[f"d.{n}"] = (c, p)
         blocks.append(f"[d.{n}] ({c.kind}) {c.title} — {c.url}\n{p}")
     if whole:
-        await progress.report("whole", f"Reading {len({c.url for c, _ in whole})} official documents in full")
+        await progress.report("whole", f"Reading {len({c.url for c, _ in whole})} documents in full")
     if not passages:
+        if not run.web:
+            raise UnrecoverableError(NOTHING_IN_FILES)
         raise RuntimeError(f"no usable source pages: {dropped}")  # retried
 
     await progress.report("ranked", f"Kept the {len(passages)} most relevant passages, ranked by keyword match (BM25)")
@@ -218,12 +242,16 @@ async def handle(run: WorkflowRun, msg: AgentMessage) -> Outcome:
     findings, w = await write_findings(brief, objectives, passages, blocks)
     await progress.report("summarized", f"{len(findings)} of {len(objectives)} questions answered with cited sources")
     if not findings:
+        if not run.web:
+            raise UnrecoverableError(NOTHING_IN_FILES)
         raise RuntimeError("no objective could be answered from the fetched sources")  # retried
 
     warnings = [f"dropped source {d}" for d in dropped]
+    if len(docs) < len(run.document_ids):
+        warnings.append(f"{len(run.document_ids) - len(docs)} attached files were deleted before research")
     if missing := [k for k in objectives if k not in {f.objective_id for f in findings}]:
         warnings.append(f"no source answered objectives {missing}; the report leaves them out")
-    calls = [s, w, *([retry] if retry else [])]
+    calls = [c for c in (s, w, retry) if c]
     usage = Usage(input_tokens=sum(c.usage["input_tokens"] for c in calls),
                   output_tokens=sum(c.usage["output_tokens"] for c in calls))
     return Outcome(next_queue=queues.WRITE, run_updates={"findings": findings, "warnings": [*run.warnings, *warnings]},

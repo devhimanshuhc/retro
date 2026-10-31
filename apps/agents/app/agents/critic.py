@@ -1,3 +1,4 @@
+import logging
 import re
 
 from bullmq import UnrecoverableError
@@ -8,6 +9,8 @@ from app.agents.base import Outcome, main
 from app.models.messages import AgentMessage
 from app.models.run import Critique, Scores, Usage, WorkflowRun, numbered_sources
 from app.services import llm, progress, queues
+
+log = logging.getLogger("agent.critic")
 
 PASS_SCORE = 0.7
 GATED = ("factual_accuracy", "citation_accuracy", "completeness")  # what the writer can fix; must all reach PASS_SCORE
@@ -35,8 +38,32 @@ def numbers(text: str) -> set[str]:
 
 def evidence(run: WorkflowRun) -> str:
     """Everything a report may take numbers from: the request and the findings (summaries, page quotes, titles)."""
-    return "\n".join([run.prompt, *(f.summary for f in run.findings),
+    return "\n".join([run.request, *(f.summary for f in run.findings),
                       *(f"{s.title} {s.quote}" for f in run.findings for s in f.sources)])
+
+
+SUMMARY = """Tell the user their report is ready. In 2-3 plain sentences, under 60 words: what the report covers and its one
+or two most important findings. Use only facts and numbers written in the report. No citations, no markdown, no greeting."""
+
+
+async def summarize(report_md: str) -> tuple[str, Usage | None]:
+    """A short reply about a passed report, on the small model. Every number in it must be in the report (checked here);
+    otherwise, or if the call fails, a plain sentence instead. Never fails the review it follows."""
+    title = next((line[2:].strip() for line in report_md.splitlines() if line.startswith("# ")), "your report")
+    fallback = f"Your report is ready: {title}. It passed review, and every claim in it is cited."
+    try:
+        c = await llm.complete("router", report_md[:8000], system=SUMMARY, think=False)
+    except Exception as e:
+        log.warning("summary call failed, using the plain sentence: %r", e)
+        return fallback, None
+    text = c.text.strip()
+    if extra := numbers(text) - numbers(report_md):
+        log.warning("summary states numbers the report doesn't (%s), using the plain sentence", sorted(extra)[:5])
+    elif not text or len(text) > 900:
+        log.warning("summary empty or too long (%d chars), using the plain sentence", len(text))
+    else:
+        return text, Usage(**c.usage)
+    return fallback, Usage(**c.usage)
 
 
 class Rubric(BaseModel):
@@ -84,19 +111,25 @@ async def handle(run: WorkflowRun, msg: AgentMessage) -> Outcome:
         findings = "\n\n".join(f"{f.objective_id}: {f.summary}\n" + "\n".join(
             f'[{num[s.url]}] {s.kind}, {s.title} ({s.url}): "{s.quote}"' for s in f.sources) for f in run.findings)
         change = f"\n\nThe user then asked for this change, which the report must now reflect: {edit.instruction}" if edit else ""
-        c = await llm.complete("critic", f"Request: {run.prompt}{change}\n\nFindings:\n{findings}\n\nReport:\n{draft.report_md}",
+        c = await llm.complete("critic", f"Request: {run.request}{change}\n\nFindings:\n{findings}\n\nReport:\n{draft.report_md}",
                                system=SYSTEM, schema=Rubric.model_json_schema(), think=False)
         rubric = Rubric.model_validate(c.data)
         # source quality is counted, not judged: the share of the report's sources that are papers or primary
         cited = numbered_sources(run.findings)
         scores = {**rubric.scores.model_dump(),
-                  "source_quality": round(sum(s.kind in ("paper", "primary") for s in cited) / max(1, len(cited)), 2)}
+                  "source_quality": round(sum(s.kind in ("file", "paper", "primary") for s in cited) / max(1, len(cited)), 2)}
         critique = Critique(passed=all(scores[k] >= PASS_SCORE for k in GATED), errors=rubric.errors, scores=Scores(**scores))
         usage = Usage(**c.usage)
         await progress.report("judged", " · ".join(f"{k.replace('_', ' ')} {v:.2f}" for k, v in scores.items()), scores=scores)
 
-    updates = {"revisions": [r.model_copy(update={"critique": critique}) if r.revision == msg.revision else r
-                             for r in run.revisions]}
+    summary = None
+    if critique.passed:
+        summary, su = await summarize(draft.report_md)
+        if su:
+            usage = Usage(input_tokens=(usage.input_tokens if usage else 0) + su.input_tokens,
+                          output_tokens=(usage.output_tokens if usage else 0) + su.output_tokens)
+    updates = {"revisions": [r.model_copy(update={"critique": critique, "summary": summary}) if r.revision == msg.revision
+                             else r for r in run.revisions]}
     await progress.report("verdict", "Passed review" if critique.passed else
                           f"Sent back to the writer with {len(critique.errors)} points", passed=critique.passed)
     if critique.passed:

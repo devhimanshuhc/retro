@@ -3,7 +3,7 @@
 name: retro
 
 x-agent: &agent
-  image: ${RETRO_IMAGES:-ghcr.io/retro-agents/retro}/agents:${RETRO_VERSION:-latest}
+  image: ${RETRO_IMAGES:-ghcr.io/devhimanshuhc/retro}/agents:${RETRO_VERSION:-latest}
   build: {context: ../apps/agents}
   env_file: .env
   environment: &env
@@ -11,6 +11,7 @@ x-agent: &agent
     MONGO_URL: mongodb://mongo:27017
     MONGO_DB: retro
     WEB_ORIGINS: http://localhost:${RETRO_WEB_PORT:-3000}
+    API_URL: http://localhost:${RETRO_API_PORT:-8000}  # where Google sign-in returns
   depends_on:
     redis: {condition: service_healthy}
     mongo: {condition: service_healthy}
@@ -39,13 +40,14 @@ services:
       interval: 5s
       retries: 30
 
+  router: {<<: *agent, command: ["uv", "run", "python", "-m", "app.agents.router"]}   # reads each message first
   supervisor: {<<: *agent, command: ["uv", "run", "python", "-m", "app.agents.supervisor"]}
   research: {<<: *agent, command: ["uv", "run", "python", "-m", "app.agents.research"]}
   writer: {<<: *agent, command: ["uv", "run", "python", "-m", "app.agents.writer"]}
   critic: {<<: *agent, command: ["uv", "run", "python", "-m", "app.agents.critic"]}
 
   web:
-    image: ${RETRO_IMAGES:-ghcr.io/retro-agents/retro}/web:${RETRO_VERSION:-latest}
+    image: ${RETRO_IMAGES:-ghcr.io/devhimanshuhc/retro}/web:${RETRO_VERSION:-latest}
     build:
       context: ../apps/web
       args: {NEXT_PUBLIC_API_URL: "http://localhost:${RETRO_API_PORT:-8000}"}

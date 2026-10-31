@@ -2,6 +2,7 @@
 import type { StepName } from "./types";
 
 export const AGENT: Record<StepName, { name: string; glyph: string; role: string }> = {
+  router: { name: "Router", glyph: "↳", role: "Reads each message and decides: chat, decline, or research" },
   supervisor: { name: "Planner", glyph: "◇", role: "Splits the request into research questions and an outline" },
   research: { name: "Researcher", glyph: "⌕", role: "Searches the web, reads pages, keeps verbatim evidence" },
   write: { name: "Writer", glyph: "✎", role: "Writes a cited report from the evidence only" },
@@ -10,6 +11,8 @@ export const AGENT: Record<StepName, { name: string; glyph: string; role: string
 
 export function stageTitle(agent: StepName, revision: number): string {
   switch (agent) {
+    case "router":
+      return "Reading your message";
     case "supervisor":
       return "Planning";
     case "research":

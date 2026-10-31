@@ -7,22 +7,24 @@ from redis.asyncio import Redis
 
 import config
 from app.deps import get_db, get_prefix, get_redis
-from app.models.api import ArtifactSummary, EditCreate, RunSummary, WorkflowCreate, WorkflowCreated
+from app.models.api import ArtifactSummary, EditCreate, MessageCreate, RunSummary, WorkflowCreate, WorkflowCreated
 from app.models.events import Event
 from app.models.messages import AgentMessage
 from app.models.run import TERMINAL, RunStatus, WorkflowRun
-from app.services import api_keys, events, limits, queues, state
+from app.services import api_keys, documents, events, limits, queues, state
 
 router = APIRouter(prefix="/workflows", tags=["workflows"])
 
 
-async def _rate_limit(request: Request, redis: Redis, prefix: str) -> None:
-    """429 + Retry-After once this client has started RUNS_PER_WINDOW runs or edits in the window."""
+async def _rate_limit(request: Request, redis: Redis, prefix: str, kind: str = "messages") -> None:
+    """429 + Retry-After once this client has sent MESSAGES_PER_WINDOW messages (new runs and follow-ups; the router
+    caps reports itself) or RUNS_PER_WINDOW edits in the window."""
     # shortcut: keyed by the socket's IP; behind a proxy every client shares one key, so read X-Forwarded-For
     # from a trusted proxy (or key by API user once there is auth) before deploying
     client = request.client.host if request.client else "unknown"
-    if retry := await limits.hit(redis, f"{prefix}:ratelimit:runs:{client}", config.RUNS_PER_WINDOW, config.RUN_WINDOW_S):
-        raise HTTPException(429, f"too many runs: {config.RUNS_PER_WINDOW} per {config.RUN_WINDOW_S // 60} min; "
+    cap = config.RUNS_PER_WINDOW if kind == "runs" else config.MESSAGES_PER_WINDOW
+    if retry := await limits.hit(redis, f"{prefix}:ratelimit:{kind}:{client}", cap, config.RUN_WINDOW_S):
+        raise HTTPException(429, f"too many {kind}: {cap} per {config.RUN_WINDOW_S // 60} min; "
                                  f"try again in {retry // 60 + 1} min", headers={"Retry-After": str(retry)})
 
 
@@ -38,9 +40,13 @@ async def create_workflow(body: WorkflowCreate, request: Request, db: AsyncDatab
     """Returns at once; the agents do the work. Follow it with GET /workflows/{id}.
     429 + Retry-After when this client has started RUNS_PER_WINDOW runs in the current window."""
     await _need_key(db)
+    if not body.web and not body.document_ids:
+        raise HTTPException(400, "Attach a file, or let the agents search the web")
+    if gone := await documents.missing(db, body.document_ids):
+        raise HTTPException(400, f"{len(gone)} attached file(s) no longer exist; attach them again")
     await _rate_limit(request, redis, prefix)
-    run = await state.create_run(db, body.prompt)
-    q = queues.open_queue(queues.SUPERVISOR, prefix=prefix)
+    run = await state.create_run(db, body.prompt, body.document_ids, body.web)
+    q = queues.open_queue(queues.ROUTER, prefix=prefix)   # the router decides: chat, decline, or research
     try:
         # shortcut: if Redis is down here the run stays `submitted` with no job; add a sweeper if that ever matters
         await queues.enqueue(q, AgentMessage(workflow_run_id=run.id))
@@ -81,7 +87,7 @@ async def edit_workflow(run_id: str, body: EditCreate, request: Request, db: Asy
     """Ask for a change to a finished report. The writer revises the current report (from the same findings) and the
     critic reviews it again. 409 unless the run is completed with a report. Counts toward the run rate limit."""
     await _need_key(db)
-    await _rate_limit(request, redis, prefix)
+    await _rate_limit(request, redis, prefix, "runs")
     if (run := await state.request_edit(db, run_id, body.instruction)) is None:
         if await state.get_run(db, run_id) is None:
             raise HTTPException(404, "workflow run not found")
@@ -89,6 +95,26 @@ async def edit_workflow(run_id: str, body: EditCreate, request: Request, db: Asy
     q = queues.open_queue(queues.WRITE, prefix=prefix)
     try:
         await queues.enqueue(q, AgentMessage(workflow_run_id=run.id, revision=run.revision))
+    finally:
+        await q.close()
+    await events.emit(db, redis, Event(type="run.status", workflow_run_id=run.id, data={"status": "working"}))
+    return run
+
+
+@router.post("/{run_id}/messages", status_code=202, response_model=RunSummary, response_model_by_alias=False)
+async def send_message(run_id: str, body: MessageCreate, request: Request, db: AsyncDatabase = Depends(get_db),
+                       redis: Redis = Depends(get_redis), prefix: str = Depends(get_prefix)):
+    """A follow-up message in a chat (a run that hasn't started research). The router answers it or starts research
+    with the whole conversation. 409 unless the run is a finished chat. Counts toward the run rate limit."""
+    await _need_key(db)
+    await _rate_limit(request, redis, prefix)
+    if (run := await state.add_message(db, run_id, body.message)) is None:
+        if await state.get_run(db, run_id) is None:
+            raise HTTPException(404, "workflow run not found")
+        raise HTTPException(409, "this conversation already has a report: ask for a change to it, or start a new run")
+    q = queues.open_queue(queues.ROUTER, prefix=prefix)
+    try:
+        await queues.enqueue(q, AgentMessage(workflow_run_id=run.id, revision=state.user_turn(run)))
     finally:
         await q.close()
     await events.emit(db, redis, Event(type="run.status", workflow_run_id=run.id, data={"status": "working"}))

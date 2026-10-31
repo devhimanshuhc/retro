@@ -11,6 +11,26 @@ class WorkflowCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     prompt: str = Field(min_length=1, max_length=4000)
+    document_ids: list[str] = Field(default_factory=list, max_length=20)
+    web: bool = True  # also search the web; False = answer from the files only
+
+
+class DocumentInfo(BaseModel):
+    """One uploaded file, without its text."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: str = Field(alias="_id")
+    name: str
+    size: int  # bytes uploaded
+    chars: int  # characters of text pulled out
+    created_at: datetime
+
+
+class MessageCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    message: str = Field(min_length=1, max_length=4000)
 
 
 class EditCreate(BaseModel):
@@ -58,7 +78,7 @@ class ProviderChoice(BaseModel):
 
 
 class ConnectorStatus(BaseModel):
-    configured: bool  # the server has a Nango secret key
+    configured: bool  # a Google app (OAuth client) is set: Retro's own, or one the user pasted
     connected: bool  # the user has connected the account
 
 
@@ -69,10 +89,27 @@ class Connector(BaseModel):
     configured: bool
     connected: bool
     account: str | None = None  # e.g. the connected Google account's email
+    redirect_uri: str | None = None  # for the setup guide: the URL to register with the user's own Google app
 
 
 class ConnectSession(BaseModel):
-    token: str  # short-lived; opens Nango's Connect UI in the browser
+    url: str  # Google's sign-in page; valid for 10 minutes
+
+
+class GoogleSessionCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    # the page to come back to; a path on the web app only, so the callback can't redirect anywhere else
+    return_to: str = Field(default="/connectors", max_length=300, pattern=r"^/([\w\-.?=&%][\w\-./?=&%]*)?$")
+
+
+class GoogleClientSet(BaseModel):
+    """The user's own Google app (OAuth client) for Google Docs. Lengths are checked in code: pydantic errors echo input."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    client_id: str
+    client_secret: SecretStr
 
 
 class DocCreated(BaseModel):

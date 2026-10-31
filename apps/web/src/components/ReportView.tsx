@@ -7,7 +7,7 @@ import { GoogleDocButton } from "./GoogleDocButton";
 import { domain, linkCitations, numberedSources, reportTitle } from "@/lib/format";
 import type { Critique, Source, WorkflowRun } from "@/lib/types";
 
-const KIND_LABEL = { paper: "Paper", primary: "Primary", news: "News", other: "Other" } as const;
+const KIND_LABEL = { paper: "Paper", primary: "Primary", news: "News", other: "Other", file: "File" } as const;
 const SCORE_LABEL: Record<string, string> = {
   factual_accuracy: "Factual", citation_accuracy: "Citations", completeness: "Complete", source_quality: "Sources",
 };
@@ -133,15 +133,23 @@ export function ReportBody({ md, sources }: { md: string; sources: Source[] }) {
           <ol className="grid border-t border-l border-dashed border-line xl:grid-cols-2">
             {sources.map((s, i) => (
               <li key={s.url} id={`source-${i + 1}`} className="scroll-mt-6 border-r border-b border-dashed border-line p-4 transition target:bg-surface-2">
-                <a href={s.url} target="_blank" rel="noopener noreferrer" className="group flex flex-col gap-1">
-                  <span className="label flex items-center gap-2 text-muted">
-                    <span className="text-fg">{i + 1}</span>
-                    <span className="truncate normal-case tracking-normal">{domain(s.url)}</span>
-                    <span className="ml-auto">{KIND_LABEL[s.kind]}</span>
-                  </span>
-                  <span className="line-clamp-2 text-sm font-medium group-hover:underline">{s.title}</span>
-                  <q className="line-clamp-3 text-xs leading-relaxed text-muted">{s.quote}</q>
-                </a>
+                {(() => {
+                  const body = (
+                    <>
+                      <span className="label flex items-center gap-2 text-muted">
+                        <span className="text-fg">{i + 1}</span>
+                        <span className="truncate normal-case tracking-normal">{domain(s.url)}</span>
+                        <span className="ml-auto">{KIND_LABEL[s.kind]}</span>
+                      </span>
+                      <span className="line-clamp-2 text-sm font-medium group-hover:underline">{s.title}</span>
+                      <q className="line-clamp-3 text-xs leading-relaxed text-muted">{s.quote}</q>
+                    </>
+                  );
+                  // the user's own file has no page to open; its quote is the evidence
+                  return s.kind === "file" ? <div className="flex flex-col gap-1">{body}</div> : (
+                    <a href={s.url} target="_blank" rel="noopener noreferrer" className="group flex flex-col gap-1">{body}</a>
+                  );
+                })()}
               </li>
             ))}
           </ol>

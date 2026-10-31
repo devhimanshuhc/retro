@@ -129,6 +129,27 @@ body {
 .pulse { animation: pulse-dot 1.4s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .pulse { animation: none; } }
 
+/* Live run feedback (taste-skill app rules: motion only for what arrives or changes while you watch, transform and
+   opacity only, quint-out under 600ms, quart in-out for things that travel; reduced motion keeps the fades). */
+:root { --ease-out: cubic-bezier(0.22, 1, 0.36, 1); --ease-in-out: cubic-bezier(0.76, 0, 0.24, 1); }
+@keyframes arrive { from { opacity: 0; transform: translateY(10px); } }
+@keyframes arrive-fade { from { opacity: 0; } }
+@keyframes rail-fill { from { transform: scaleY(0); } }
+@keyframes settle { from { opacity: 0; transform: scale(0.6); } }
+@keyframes turn { to { transform: rotate(1turn); } }
+.arrive { animation: arrive 320ms var(--ease-out) both; animation-delay: var(--delay, 0ms); }
+.rail-fill { transform-origin: top; animation: rail-fill 420ms var(--ease-in-out) both; }
+.settle { animation: settle 260ms var(--ease-out) both; }
+.turning { animation: turn 1.1s linear infinite; }
+.fold { display: grid; grid-template-rows: 1fr; transition: grid-template-rows 280ms var(--ease-out), opacity 200ms ease; }
+.fold[data-closed="true"] { grid-template-rows: 0fr; opacity: 0; }
+.fold > * { overflow: hidden; min-height: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .arrive { animation-name: arrive-fade; animation-duration: 200ms; }
+  .rail-fill, .settle, .turning { animation: none; }
+  .fold { transition: opacity 200ms ease; }
+}
+
 /* the full-page artifact: the report set larger, like a published article */
 .artifact .report { font-size: 1.06rem; line-height: 1.75; }
 .artifact .report h1 { font-size: clamp(2.4rem, 5vw, 3.4rem); line-height: 1.05; margin-bottom: 2rem; }

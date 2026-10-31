@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from redis.asyncio import Redis
 
 import config
-from app.routers import artifacts, connectors, dlq, queues, settings, workflows
+from app.routers import artifacts, connectors, dlq, documents, queues, settings, workflows
 from app.services import state
 
 
@@ -28,6 +28,7 @@ app.include_router(dlq.router)
 app.include_router(artifacts.router)
 app.include_router(connectors.router)
 app.include_router(settings.router)
+app.include_router(documents.router)
 
 
 @app.get("/health")

@@ -1,4 +1,4 @@
-import type { ArtifactSummary, LlmSettings, Provider, Connector, ConnectorStatus, ConnectSession, DeadLetter, DocCreated, QueueCounts, RunStatus, RunSummary, WorkerInfo, WorkflowCreated, WorkflowRun } from "./types";
+import type { ArtifactSummary, DocumentInfo, LlmSettings, Provider, Connector, ConnectorStatus, ConnectSession, DeadLetter, DocCreated, QueueCounts, RunStatus, RunSummary, WorkerInfo, WorkflowCreated, WorkflowRun } from "./types";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -20,19 +20,29 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export const createWorkflow = (prompt: string) =>
-  call<WorkflowCreated>("/workflows", { method: "POST", body: JSON.stringify({ prompt }) });
+export const createWorkflow = (prompt: string, documentIds: string[] = [], web = true) =>
+  call<WorkflowCreated>("/workflows", { method: "POST", body: JSON.stringify({ prompt, document_ids: documentIds, web }) });
+export const uploadDocument = async (file: File) => {
+  const form = new FormData();
+  form.append("file", file);
+  const res = await fetch(`${API_URL}/documents`, { method: "POST", body: form }); // the browser sets the multipart header
+  if (!res.ok) throw new ApiError(res.status, (await res.json().catch(() => null))?.detail ?? `HTTP ${res.status}`);
+  return (await res.json()) as DocumentInfo;
+};
+export const deleteDocument = async (id: string) => {
+  const res = await fetch(`${API_URL}/documents/${encodeURIComponent(id)}`, { method: "DELETE" });
+  if (!res.ok && res.status !== 404) throw new ApiError(res.status, `HTTP ${res.status}`);
+};
 export const listWorkflows = (status?: RunStatus) =>
   call<RunSummary[]>(`/workflows${status ? `?status=${status}` : ""}`);
 export const getWorkflow = (id: string) => call<WorkflowRun>(`/workflows/${encodeURIComponent(id)}`);
 /** WS /workflows/{id}/events: same host as the API, http(s) → ws(s). */
 export const eventsUrl = (id: string) =>
   `${API_URL.replace(/^http/, "ws")}/workflows/${encodeURIComponent(id)}/events`;
+export const sendMessage = (id: string, message: string) =>
+  call<RunSummary>(`/workflows/${encodeURIComponent(id)}/messages`, { method: "POST", body: JSON.stringify({ message }) });
 export const editWorkflow = (id: string, instruction: string) =>
   call<RunSummary>(`/workflows/${encodeURIComponent(id)}/edit`, { method: "POST", body: JSON.stringify({ instruction }) });
-/** Self-hosted Nango: its API and Connect UI are public URLs (the secret key stays on the backend). */
-export const NANGO_HOST = process.env.NEXT_PUBLIC_NANGO_HOST ?? "http://localhost:3003";
-export const NANGO_CONNECT_URL = process.env.NEXT_PUBLIC_NANGO_CONNECT_URL ?? "http://localhost:3009";
 export const getLlmSettings = () => call<LlmSettings>("/settings/llm");
 /** The provider checks the key first (400 with the reason if it's wrong); saving switches the agents to it. The API
  * never sends a key back. */
@@ -47,7 +57,10 @@ export const disconnectGoogle = async () => {
   if (!res.ok) throw new ApiError(res.status, (await res.json().catch(() => null))?.detail ?? `HTTP ${res.status}`);
 };
 export const getGoogleStatus = () => call<ConnectorStatus>("/connectors/google");
-export const createGoogleSession = () => call<ConnectSession>("/connectors/google/session", { method: "POST" });
+export const createGoogleSession = (returnTo: string) =>
+  call<ConnectSession>("/connectors/google/session", { method: "POST", body: JSON.stringify({ return_to: returnTo }) });
+export const saveGoogleClient = (clientId: string, clientSecret: string) =>
+  call<Connector>("/connectors/google/client", { method: "PUT", body: JSON.stringify({ client_id: clientId, client_secret: clientSecret }) });
 export const exportGoogleDoc = (runId: string) =>
   call<DocCreated>(`/workflows/${encodeURIComponent(runId)}/google-doc`, { method: "POST" });
 export const listArtifacts = () => call<ArtifactSummary[]>("/artifacts");

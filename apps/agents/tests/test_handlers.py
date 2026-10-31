@@ -154,8 +154,9 @@ async def test_writer_and_critic_see_the_verified_quotes(calls):
     await writer.handle(run_at("write"), AgentMessage(workflow_run_id="r"))
     await critic.handle(run_at("critic", revisions=[Revision(revision=0, report_md=GOOD_REPORT)]),
                         AgentMessage(workflow_run_id="r"))
-    for _, prompt, _ in calls:
-        assert '"Nvidia guided fourth-quarter revenue to $37.5 billion."' in prompt
+    for agent, prompt, _ in calls:
+        if agent != "router":  # the summary reads the passed report, not the quotes
+            assert '"Nvidia guided fourth-quarter revenue to $37.5 billion."' in prompt
 
 
 async def test_critic_cap_completes_with_warning(calls, monkeypatch):

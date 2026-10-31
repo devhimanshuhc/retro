@@ -1,9 +1,9 @@
 #!/usr/bin/env sh
-# Install and start Retro locally:   curl -fsSL https://raw.githubusercontent.com/<owner>/retro/main/install.sh | sh
+# Install and start Retro locally:   curl -fsSL https://raw.githubusercontent.com/devhimanshuhc/retro/main/install.sh | sh
 # Installs into ~/retro (override with RETRO_DIR), starts everything and opens the browser, which asks for your API key.
 set -eu
 
-REPO="${RETRO_REPO:-<owner>/retro}"            # set when the repository is published
+REPO="${RETRO_REPO:-devhimanshuhc/retro}"
 BRANCH="${RETRO_BRANCH:-main}"
 DIR="${RETRO_DIR:-$HOME/retro}"
 RAW="https://raw.githubusercontent.com/$REPO/$BRANCH/deploy"

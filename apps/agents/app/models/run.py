@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 RunStatus = Literal["submitted", "working", "input-required", "completed", "failed", "canceled"]
 TERMINAL: tuple[RunStatus, ...] = ("completed", "failed", "canceled")
 
-StepName = Literal["supervisor", "research", "write", "critic"]
+StepName = Literal["router", "supervisor", "research", "write", "critic"]
 
 
 def now() -> datetime:
@@ -42,11 +42,11 @@ class Plan(BaseModel):
     outline: list[str] = Field(min_length=1, max_length=8)  # report section headings, in order
 
 
-SourceKind = Literal["paper", "primary", "news", "other"]
+SourceKind = Literal["paper", "primary", "news", "other", "file"]  # file: one the user uploaded
 
 
 class Source(BaseModel):
-    url: str = Field(pattern=r"^https?://")
+    url: str = Field(pattern=r"^(https?|doc)://")  # doc://<id>: the user's own file (services/documents.py)
     title: str
     kind: SourceKind  # paper: journal, conference or preprint; primary: filing, official site, dataset, standard
     quote: str = Field(min_length=20, max_length=500)  # verbatim from the page; services/sources.py checks it's there
@@ -74,6 +74,7 @@ class Critique(BaseModel):
 class Revision(BaseModel):
     revision: int = Field(ge=0)
     report_md: str
+    summary: str | None = None  # a short reply to the user about this draft, written once it passes review
     created_at: datetime = Field(default_factory=now)
     critique: Critique | None = None
 
@@ -92,6 +93,17 @@ def numbered_sources(findings: list[Finding]) -> list[Source]:
     return list(seen.values())
 
 
+Intent = Literal["chat", "decline", "research"]
+
+
+class Turn(BaseModel):
+    """One message of the conversation the router handles before (or instead of) research."""
+
+    role: Literal["user", "assistant"]
+    text: str = Field(min_length=1, max_length=4000)
+    created_at: datetime = Field(default_factory=now)
+
+
 class EditRequest(BaseModel):
     """A change the user asked for after a report was done; the writer applies it starting at `revision`."""
 
@@ -107,6 +119,11 @@ class WorkflowRun(BaseModel):
 
     id: str = Field(default_factory=lambda: uuid4().hex, alias="_id")
     prompt: str = Field(min_length=1)
+    turns: list[Turn] = Field(default_factory=list)  # the conversation, first message included; empty on old runs
+    intent: Intent | None = None  # the router's decision on the latest message: chat, decline, or research
+    brief: str | None = None  # the research request in one sentence, when a later message started it (else the prompt)
+    document_ids: list[str] = Field(default_factory=list)  # the user's files to research (Mongo `documents`)
+    web: bool = True  # also search the web; False = only the files
     status: RunStatus = "submitted"
     revision: int = Field(default=0, ge=0)
     steps: dict[StepName, StepState] = Field(default_factory=dict)
@@ -120,6 +137,11 @@ class WorkflowRun(BaseModel):
     events: list[dict[str, Any]] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=now)
     updated_at: datetime = Field(default_factory=now)
+
+    @property
+    def request(self) -> str:
+        """What the agents research: the router's standalone brief, or the first message as the user wrote it."""
+        return self.brief or self.prompt
 
     def tokens_used(self) -> int:
         return sum(u.input_tokens + u.output_tokens for u in self.usage.values())
@@ -142,3 +164,6 @@ class RunUpdate(BaseModel):
     revisions: list[Revision] = None  # type: ignore[assignment]
     warnings: list[str] = None  # type: ignore[assignment]
     usage: dict[StepName, Usage] = None  # type: ignore[assignment]
+    brief: str = Field(default=None, min_length=1, max_length=1000)  # type: ignore[assignment]
+    turns: list[Turn] = None  # type: ignore[assignment]
+    intent: Intent = None  # type: ignore[assignment]

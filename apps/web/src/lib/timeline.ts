@@ -1,7 +1,7 @@
 // Pure: run events → what the run page shows. Tested in timeline.test.ts (node --test).
 import type { RunEvent, RunStatus, StepName, WorkflowRun } from "./types.ts";
 
-export const STEPS: StepName[] = ["supervisor", "research", "write", "critic"];
+export const STEPS: StepName[] = ["router", "supervisor", "research", "write", "critic"];
 export const FINAL: RunStatus[] = ["completed", "failed", "canceled"];
 
 export type StagePhase = "working" | "done" | "retrying" | "paused" | "dead" | "stopped";
@@ -106,6 +106,6 @@ function build(run: WorkflowRun | null, log: RunEvent[]): Timeline {
   }
   stages.sort((a, b) => (a.startedAt ?? "").localeCompare(b.startedAt ?? ""));
   const started = new Set(stages.map((s) => s.agent));
-  const pending = status && FINAL.includes(status) ? [] : STEPS.filter((a) => !started.has(a));
+  const pending = status && FINAL.includes(status) ? [] : STEPS.filter((a) => a !== "router" && !started.has(a)); // the router never waits: it goes first
   return { run, status, stages, pending, log };
 }

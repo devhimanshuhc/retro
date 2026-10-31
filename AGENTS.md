@@ -23,7 +23,6 @@ The two apps share no code and talk only over HTTP + WebSocket (`NEXT_PUBLIC_API
 | Task | Run in | Command |
 |---|---|---|
 | Start Redis + Mongo | repo root | `docker compose up -d --wait` |
-| Start Nango (connectors) | repo root | `docker compose --profile nango up -d` (dashboard :3003, Connect UI :3009; secrets in the root `.env`) |
 | Backend tests | `apps/agents` | `uv run pytest -q` |
 | API dev server (:8000) | `apps/agents` | `uv run --env-file .env python scripts/dev_server.py` |
 | Agent worker | `apps/agents` | `uv run --env-file .env python -m app.agents.<name>` |

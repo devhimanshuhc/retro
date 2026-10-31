@@ -11,11 +11,13 @@ OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 # offering claude.ai login to other users, and it doesn't work inside Docker.
 USE_CLAUDE_LOGIN = os.environ.get("USE_CLAUDE_LOGIN", "0") == "1"
 
+ROUTER_MODEL = os.environ.get("ROUTER_MODEL", "claude-haiku-4-5-20251001")  # reads every message: small and cheap
 SUPERVISOR_MODEL = os.environ.get("SUPERVISOR_MODEL", "claude-haiku-4-5-20251001")
 RESEARCH_MODEL = os.environ.get("RESEARCH_MODEL", "claude-haiku-4-5-20251001")
 WRITER_MODEL = os.environ.get("WRITER_MODEL", "claude-sonnet-5-5")
 CRITIC_MODEL = os.environ.get("CRITIC_MODEL", "claude-haiku-4-5-20251001")
 # The same agents on OpenAI (Responses API)
+OPENAI_ROUTER_MODEL = os.environ.get("OPENAI_ROUTER_MODEL", "gpt-6-luna")
 OPENAI_SUPERVISOR_MODEL = os.environ.get("OPENAI_SUPERVISOR_MODEL", "gpt-6-luna")
 OPENAI_RESEARCH_MODEL = os.environ.get("OPENAI_RESEARCH_MODEL", "gpt-6-luna")
 OPENAI_WRITER_MODEL = os.environ.get("OPENAI_WRITER_MODEL", "gpt-6.1-sol")
@@ -44,16 +46,15 @@ BROWSER_FALLBACK = os.environ.get("BROWSER_FALLBACK", "1") == "1"
 RUN_TOKEN_BUDGET = int(os.environ.get("RUN_TOKEN_BUDGET", "500000"))
 
 # POST /workflows: at most RUNS_PER_WINDOW new runs per client per RUN_WINDOW_S seconds (429 + Retry-After after)
-RUNS_PER_WINDOW = int(os.environ.get("RUNS_PER_WINDOW", "10"))
+RUNS_PER_WINDOW = int(os.environ.get("RUNS_PER_WINDOW", "10"))  # reports started (counted when the router starts research) and edits
+MESSAGES_PER_WINDOW = int(os.environ.get("MESSAGES_PER_WINDOW", "60"))  # every message; the router reads each one cheaply
 RUN_WINDOW_S = int(os.environ.get("RUN_WINDOW_S", "3600"))
 
-# Connectors via a self-hosted Nango (docker compose --profile nango). The secret key is in the Nango dashboard
-# (Environment settings); keep it here only, never in apps/web. Empty = connectors are off.
-NANGO_HOST = os.environ.get("NANGO_HOST", "http://localhost:3003")
-NANGO_SECRET_KEY = os.environ.get("NANGO_SECRET_KEY", "")
-NANGO_GOOGLE_KEY = os.environ.get("NANGO_GOOGLE_KEY", "google-drive")  # the integration's unique key in Nango
-# shortcut: one owner for every connection until the app has user accounts; then use the signed-in user's id
-CONNECTOR_USER = os.environ.get("CONNECTOR_USER", "retro-owner")
+# Google Docs export. Retro's own Google app (OAuth client, "Desktop app" type) when set; else users paste theirs in
+# Connectors. Not a secret for a Desktop-app client (Google documents it as non-confidential).
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+API_URL = os.environ.get("API_URL", "http://localhost:8000").rstrip("/")  # how the browser reaches the API (OAuth return)
 
 # Browser origins allowed to call the API (the Next.js app in apps/web)
 WEB_ORIGINS = os.environ.get("WEB_ORIGINS", "http://localhost:3000").split(",")

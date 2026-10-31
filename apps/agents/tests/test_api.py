@@ -23,7 +23,7 @@ async def test_create_returns_202_at_once_and_enqueues(api, db, prefix, cleanup_
     assert (await state.get_run(db, run_id)).status == "submitted"
 
     counts = (await api.get("/queues")).json()
-    assert counts["agent.supervisor"]["waiting"] == 1 and set(counts) == set(queues.ALL_QUEUES)
+    assert counts["agent.router"]["waiting"] == 1 and set(counts) == set(queues.ALL_QUEUES)
     assert set(counts["agent.write"]) == {"waiting", "active", "delayed", "failed", "completed"}
 
     run = (await api.get(f"/workflows/{run_id}")).json()

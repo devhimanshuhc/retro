@@ -3,12 +3,13 @@ from bullmq import Job, Queue
 import config
 from app.models.messages import AgentMessage
 
+ROUTER = "agent.router"
 SUPERVISOR = "agent.supervisor"
 RESEARCH = "agent.research"
 WRITE = "agent.write"
 CRITIC = "agent.critic"
 DLQ = "agent.dlq"
-AGENT_QUEUES = (SUPERVISOR, RESEARCH, WRITE, CRITIC)
+AGENT_QUEUES = (ROUTER, SUPERVISOR, RESEARCH, WRITE, CRITIC)
 ALL_QUEUES = (*AGENT_QUEUES, DLQ)
 
 DEFAULT_JOB_OPTS = {
