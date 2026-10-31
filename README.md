@@ -20,9 +20,9 @@ check it, and keep going when something breaks. Everything runs on your own mach
 
 ## Demo
 
-[![Retro demo: one question becomes a ticket, passes through four agents, survives a crash, and lands as a cited report](docs/assets/retro-demo-poster.png)](docs/assets/retro-demo.mp4)
+https://github.com/user-attachments/assets/21fa06fe-5166-4ce8-bad0-dcd9bc33c84f
 
-**▶ [Play the demo](docs/assets/retro-demo.mp4)** (sound on). The questions, searches, sources, quotes, both send-backs and the
+Sound on. The questions, searches, sources, quotes, both send-backs and the
 final scores come from a real run. The worker crash didn't happen in that run: it shows what Retro does when one does,
 which the [tests prove](docs/EVALS.md#4-failures-retries-and-recovery).
 
